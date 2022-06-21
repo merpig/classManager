@@ -1,0 +1,22 @@
+{
+  "name": "classmanager",
+  "version": "1.0.0",
+  "description": "CLI for managing class repository",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/merpig/classManager.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/merpig/classManager/issues"
+  },
+  "homepage": "https://github.com/merpig/classManager#readme",
+  "dependencies": {
+    "inquirer": "^8.2.4"
+  }
+}

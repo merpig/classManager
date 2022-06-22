@@ -54,9 +54,19 @@ const copyUnit = unit => {
     let gitlabContentPath = `${GITLAB}/${dirInGitlab}`
 
     const rmSolved = `rm -rf 01-Activities/*/Solved 01-Activities/*/Main 02-Homework/Master 02-Homework/Main 02-Challenge/Main 03-Algorithms/*/Solved`
-
-    child_process.execSync(`cp -r ${classContentPath}/${unit} ${gitlabContentPath} && cd ${gitlabContentPath}/${unit} && ${rmSolved}`);
+    const addSandbox = `mkdir 05-Sandbox && cd 05-Sandbox && echo # Sandbox folder for activities and testing code > README.md`
+    child_process.execSync(`cp -r ${classContentPath}/${unit} ${gitlabContentPath} && cd ${gitlabContentPath}/${unit} && ${rmSolved} && ${addSandbox}`);
     changesToPush.push(`unit ${unit} added`);
+}
+
+const removeUnit = (dir,unit) => {
+    const rmUnit = `cd ${dir} && rm -rf ${unit}`;
+    child_process.execSync(rmUnit);
+    const updateChanges = changesToPush.filter(e=>!e.includes(unit));
+    if(updateChanges.length === changesToPush.length){
+        changesToPush.push(`removed unit ${unit}`);
+    }
+    else changesToPush = updateChanges;
 }
 
 const pushChanges = () => {
@@ -65,6 +75,82 @@ const pushChanges = () => {
     child_process.execSync(`cd ${gitlabContentPath} && git add -A && git commit -m "${changesToPush.join(" ")}" && git push`)
 }
 
+const selectUnitToAdd = () => {
+    let dirInGitlab = getSubDirs(GITLAB)[0];
+    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`
+    let unitsInGitlab = getSubDirs(gitlabContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
+
+    let dirInGithub = getSubDirs(GITHUB)[0];
+    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`
+    let unitsInGithub = getSubDirs(classContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
+
+    inquirer
+    .prompt([
+        {
+            name: "options",
+            message: "Select unit to add:",
+            type: "list",
+            choices: [
+                ...unitsInGithub.filter(unit=>!unitsInGitlab.includes(unit)),
+                "Back"
+            ]
+        }
+    ])
+    .then(({options})=>{
+        
+        switch(options){
+            case "Back":
+                break;
+            default:
+                copyUnit(options);
+        }
+        gitlabPromts();
+    })
+    .catch((error) => {
+        if (error.isTtyError) {
+            console.log("Prompt failed in the current environment");
+        } else {
+            console.log(error)
+            gitlabPromts();
+        }
+    });
+}
+
+const selectUnitToRemove = () => {
+    let dirInGitlab = getSubDirs(GITLAB)[0];
+    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`
+    let unitsInGitlab = getSubDirs(gitlabContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
+
+    inquirer
+    .prompt([
+        {
+            name: "options",
+            message: "Select unit to add:",
+            type: "list",
+            choices: [
+                ...unitsInGitlab,
+                "Back"
+            ]
+        }
+    ])
+    .then(({options})=>{
+        switch(options){
+            case "Back":
+                break;
+            default:
+                removeUnit(gitlabContentPath,options);
+        }
+        gitlabPromts();
+    })
+    .catch((error) => {
+        if (error.isTtyError) {
+            console.log("Prompt failed in the current environment");
+        } else {
+            console.log(error)
+            gitlabPromts();
+        }
+    });
+}
 
 const promptForLink = async directory => 
     await inquirer
@@ -176,10 +262,11 @@ const gitlabPromts = () =>
                 "Hard reset from origin",
                 "Current Units",
                 `Add next unit (${nextUnit(getSubDirs(`${GITLAB}/${getSubDirs(GITLAB)[0]}`))}) unsolved`,
+                "Add unit unsolved",
                 // "Add All Solved to Unit",
                 // "Add Selection of Solved to Unit",
                 // "Remove Solved from Unit",
-                // "Remove Unit",
+                "Remove unit",
                 "Back",
                 "Exit"
             ]
@@ -201,8 +288,14 @@ const gitlabPromts = () =>
                 gitlabPromts();
                 break;
             case "Current Units":
-                console.log(getSubDirs(repo).filter(unit=>unit[0]!=="."));
+                console.log(getSubDirs(repo).filter(unit=>unit[0]!=="."&&unit[0]!=="R"));
                 gitlabPromts();
+                break;
+            case "Add unit unsolved":
+                selectUnitToAdd();
+                break;
+            case "Remove unit":
+                selectUnitToRemove();
                 break;
             case "Back":
                 basePromts();

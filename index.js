@@ -46,17 +46,27 @@ const nextUnit = arr => {
     else return "none";
 }
 
-const copyUnitUnsolved = unit => {
+const copyUnitUnsolved = (unit,type) => {
     let dirInGithub = getSubDirs(GITHUB)[0];
     let dirInGitlab = getSubDirs(GITLAB)[0];
 
-    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`
-    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`
+    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`;
+    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`;
 
-    const rmSolved = `rm -rf 01-Activities/*/Solved 01-Activities/*/Main 02-Homework/Master 02-Homework/Main 02-Challenge/Main 03-Algorithms/*/Solved`
-    const addSandbox = `mkdir 05-Sandbox && cd 05-Sandbox && echo # Sandbox folder for activities and testing code > README.md`
-    child_process.execSync(`cp -r ${classContentPath}/${unit} ${gitlabContentPath} && cd ${gitlabContentPath}/${unit} && ${rmSolved} && ${addSandbox}`);
-    changesToPush.push(`unit ${unit} added`);
+    const rmSolved = `rm -rf 01-Activities/*/Solved 01-Activities/*/Main 02-Homework/Master 02-Homework/Main 02-Challenge/Main 03-Algorithms/*/Solved`;
+    const addSandbox = `mkdir 05-Sandbox && cd 05-Sandbox && echo # Sandbox folder for activities and testing code > README.md`;
+    if(type==="removeAllSolved"){
+        child_process.execSync(`cp -r ${classContentPath}/${unit} ${gitlabContentPath} && cd ${gitlabContentPath}/${unit} && ${rmSolved}`);
+        let filteredChanges = changesToPush.filter(change=>!change.includes(`unit ${unit} solved added`));
+        if(filteredChanges.length<changesToPush){
+            changesToPush = filteredChanges;
+        }
+        else changesToPush.push(`unit ${unit} all solved removed`);
+    }
+    else {
+        child_process.execSync(`cp -r ${classContentPath}/${unit} ${gitlabContentPath} && cd ${gitlabContentPath}/${unit} && ${rmSolved} && ${addSandbox}`);
+        changesToPush.push(`unit ${unit} added`);
+    }
 }
 
 const copyUnitSolved = unit => {
@@ -78,7 +88,7 @@ const copyUnitSolved = unit => {
 const removeUnit = (dir,unit) => {
     const rmUnit = `cd ${dir} && rm -rf ${unit}`;
     child_process.execSync(rmUnit);
-    const updateChanges = changesToPush.filter(e=>!e.includes(unit));
+    const updateChanges = changesToPush.filter(e=>!e.includes(`unit ${unit} added`));
     if(updateChanges.length === changesToPush.length){
         changesToPush.push(`removed unit ${unit}`);
     }
@@ -87,29 +97,157 @@ const removeUnit = (dir,unit) => {
 
 const pushChanges = () => {
     let dirInGitlab = getSubDirs(GITLAB)[0];
-    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`
-    child_process.execSync(`cd ${gitlabContentPath} && git add -A && git commit -m "${changesToPush.join(" ")}" && git push`)
+    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`;
+    let commitMessage = `${changesToPush.join(" and ")}`;
+
+    if(commitMessage === "") commitMessage = "committing changes";
+
+    child_process.execSync(`cd ${gitlabContentPath} && git add -A && git commit -m "${changesToPush.join(" and ")}" && git push`);
+}
+
+const addSelectionSolved = (start,end,unit,activitiesPath,activities) => {
+    let startIndex = activities.indexOf(start);
+    let endIndex = activities.indexOf(end);
+
+    let dirInGitlab = getSubDirs(GITLAB)[0];
+    let gitlabContentPath = `${GITLAB}/${dirInGitlab}/${unit}`;
+    let gitlabUnitActivities = getSubDirs(gitlabContentPath).filter(dir=>dir.includes("01"))[0];
+    let gitlabUnitActivitiesPath = `${gitlabContentPath}/${gitlabUnitActivities}`;
+
+    if(startIndex<=endIndex){
+        for(let i = startIndex; i<=endIndex; i++){
+            child_process.execSync(`cp -r ${activitiesPath}/${activities[i]} ${gitlabUnitActivitiesPath}`);
+            changesToPush.push(`solved added for ${activities[i]}`);
+        }
+    }
+    else {
+        for(let i = startIndex; i>=endIndex; i--){
+            child_process.execSync(`cp -r ${activitiesPath}/${activities[i]} ${gitlabUnitActivitiesPath}`);
+            changesToPush.push(`solved added for ${activities[i]}`);
+        }
+    }
+}
+
+const removeSelectionSolved = (start,end,unit,activities) => {
+    let startIndex = activities.indexOf(start);
+    let endIndex = activities.indexOf(end);
+
+    let dirInGitlab = getSubDirs(GITLAB)[0];
+    let gitlabContentPath = `${GITLAB}/${dirInGitlab}/${unit}`
+    let gitlabUnitActivities = getSubDirs(gitlabContentPath).filter(dir=>dir.includes("01"))[0];
+    let gitlabUnitActivitiesPath = `${gitlabContentPath}/${gitlabUnitActivities}`;
+
+    if(startIndex<=endIndex){
+        for(let i = startIndex; i<=endIndex; i++){
+            child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activities[i]}/Solved`);
+            let filteredChanges = changesToPush.filter(change=>!change.includes(`solved added for ${activities[i]}`));
+            if(filteredChanges.length<changesToPush){
+                changesToPush = filteredChanges;
+            }
+            else changesToPush.push(`solved removed for ${activities[i]}`);
+        }
+    }
+    else {
+        for(let i = startIndex; i>=endIndex; i--){
+            child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activities[i]}/Solved`);
+            let filteredChanges = changesToPush.filter(change=>!change.includes(`solved added for ${activities[i]}`));
+            if(filteredChanges.length<changesToPush){
+                changesToPush = filteredChanges;
+            }
+            else changesToPush.push(`solved removed for ${activities[i]}`);
+        }
+    }
+
+}
+
+const promptForSelection = (type,unit) => {
+    let dirInGithub = getSubDirs(GITHUB)[0];
+
+    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`;
+    let unitPath = `${classContentPath}/${unit}`;
+
+    let activitiesName = getSubDirs(unitPath).filter(activity=>activity[0]!=="."&&activity[0]!=="R").filter(dir=>dir.includes("01"))[0];
+    let activitiesPath = `${unitPath}/${activitiesName}`;
+
+    let activities = getSubDirs(activitiesPath).filter(activity=>activity[0]!=="."&&activity[0]!=="R"&&!activity.includes("Ins"));
+
+    let messageStart = "Select start activity to " + type==="selectionSolved"? "add solved to:":"remove solved from:";
+    let messageEnd = "Select end activity to " + type==="selectionSolved"?"add solved to:":"remove solved from:";
+
+    inquirer
+    .prompt([
+        {
+            name: "start",
+            message: messageStart,
+            type: "list",
+            choices: [
+                ...activities
+            ]
+        },
+        {
+            name: "end",
+            message: messageEnd,
+            type: "list",
+            choices: [
+                ...activities
+            ]
+        }
+    ])
+    .then(({start,end})=>{
+        if(type==="selectionSolved"){
+            console.info(`Adding solved activites ${start} through ${end} to unit ${unit}...`);
+            addSelectionSolved(start,end,unit,activitiesPath,activities);
+            console.info(`Added solved activites ${start} through ${end} to unit ${unit}.`);
+            gitlabPromts();
+        }
+        else {
+            console.info(`Removing solved activites ${start} through ${end} from unit ${unit}...`);
+            removeSelectionSolved(start,end,unit,activities);
+            console.info(`Removed solved activites ${start} through ${end} from unit ${unit}...`);
+            gitlabPromts();
+        }
+    })
+    .catch((error) => {
+        if (error.isTtyError) {
+            console.log("Prompt failed in the current environment");
+        } else {
+            console.log(error)
+            gitlabPromts();
+        }
+    });
 }
 
 const selectUnitToAdd = (type) => {
     let dirInGitlab = getSubDirs(GITLAB)[0];
-    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`
+    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`;
     let unitsInGitlab = getSubDirs(gitlabContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
 
     let dirInGithub = getSubDirs(GITHUB)[0];
-    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`
+    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`;
     let unitsInGithub = getSubDirs(classContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
 
     let units;
+    let message;
 
-    if(type === "unsolved") units = unitsInGithub.filter(unit=>!unitsInGitlab.includes(unit));
-    else units = unitsInGithub;
+    console.log(type);
+
+    if(type === "unsolved") {
+        message = "Select unit to add:";
+        units = unitsInGithub.filter(unit=>!unitsInGitlab.includes(unit));
+    }
+    else {
+        if(type==="solved") message = "Select unit to add all solved to:";
+        else if(type==="selectionSolved") message = "Select unit to add selection of solved to:";
+        else if(type==="removeAllSolved") message = "Select unit to remove all solved from:";
+        else if(type==="removeSelectionSolved") message = "Select unit to remove selection of solved from:";
+        units = unitsInGitlab;
+    }
 
     inquirer
     .prompt([
         {
             name: "options",
-            message: "Select unit to add:",
+            message,
             type: "list",
             choices: [
                 ...units,
@@ -127,19 +265,26 @@ const selectUnitToAdd = (type) => {
                     console.info(`Adding unit ${options}...`);
                     copyUnitUnsolved(options);
                     console.info(`Unit ${options} added. Make sure to select push to update gitlab.`);
+                    gitlabPromts();
                 }
                 else if(type==="solved"){
                     console.info(`Adding all solved to unit ${options}...`);
                     copyUnitSolved(options);
                     console.info(`Unit ${options} all solved added. Make sure to select push to update gitlab.`);
+                    gitlabPromts();
                 }
                 else if(type==="removeAllSolved"){
                     console.info(`Removing all solved from unit ${options}...`);
-                    copyUnitSolved(options);
+                    copyUnitUnsolved(options,type);
                     console.info(`All solved removed from unit ${options}.`);
+                    gitlabPromts();
+                }
+                else {
+                    // Prompt for a selection
+                    promptForSelection(type,options);
                 }
         }
-        gitlabPromts();
+        
     })
     .catch((error) => {
         if (error.isTtyError) {
@@ -311,9 +456,9 @@ const gitlabPromts = () =>
                 `Add next unit (${nextUnit(getSubDirs(`${GITLAB}/${getSubDirs(GITLAB)[0]}`))}) unsolved`,
                 "Add unit unsolved",
                 "Add all solved to unit",
-                // "Add selection of solved to unit",
-                "Remove solved from unit",
-                // "Remove selection of solved from unit"
+                "Add selection of solved to unit",
+                "Remove all solved from unit",
+                "Remove selection of solved from unit",
                 "Remove unit",
                 "Back",
                 "Exit"
@@ -345,8 +490,14 @@ const gitlabPromts = () =>
             case "Add all solved to unit":
                 selectUnitToAdd("solved");
                 break;
-            case "Remove solved from unit":
+            case "Add selection of solved to unit":
+                selectUnitToAdd("selectionSolved");
+                break;
+            case "Remove all solved from unit":
                 selectUnitToAdd("removeAllSolved");
+                break;
+            case "Remove selection of solved from unit":
+                selectUnitToAdd("removeSelectionSolved");
                 break;
             case "Remove unit":
                 selectUnitToRemove();
@@ -359,7 +510,7 @@ const gitlabPromts = () =>
                 break;
             default:
                 let unit = options.split("(")[1].split(")")[0];
-                if(unit === "none") console.info("No more units left to add!")
+                if(unit === "none") console.info("No more units left to add!");
                 else {
                     console.info(`Adding unit ${unit}...`);
                     copyUnitUnsolved(unit);
@@ -372,7 +523,7 @@ const gitlabPromts = () =>
         if (error.isTtyError) {
             console.log("Prompt failed in the current environment");
         } else {
-            console.log(error)
+            console.log(error);
         }
     });
 
@@ -461,5 +612,4 @@ const init = async () => {
     basePromts();
 }
 
-// nextUnit(getSubDirs(`${GITLAB}/${getSubDirs(GITLAB)[0]}`))
 init();

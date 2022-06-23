@@ -1,6 +1,9 @@
 const inquirer = require("inquirer");
 const { readdirSync, mkdirSync, existsSync } = require("fs");
 const child_process = require("child_process");
+const ChangeLog = require("./utils/changeLog.js");
+
+const changeLog = new ChangeLog();
 
 const GITHUB = "github";
 const GITLAB = "gitlab";
@@ -57,15 +60,15 @@ const copyUnitUnsolved = (unit,type) => {
     const addSandbox = `mkdir 05-Sandbox && cd 05-Sandbox && echo # Sandbox folder for activities and testing code > README.md`;
     if(type==="removeAllSolved"){
         child_process.execSync(`cp -r ${classContentPath}/${unit} ${gitlabContentPath} && cd ${gitlabContentPath}/${unit} && ${rmSolved}`);
-        let filteredChanges = changesToPush.filter(change=>!change.includes(`unit ${unit} solved added`));
-        if(filteredChanges.length<changesToPush){
-            changesToPush = filteredChanges;
+        let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`unit ${unit} solved added`));
+        if(filteredChanges.length<changeLog.getLog().length){
+            changeLog.updateLog(filteredChanges);
         }
-        else changesToPush.push(`unit ${unit} all solved removed`);
+        else changeLog.pushToLog(`unit ${unit} all solved removed`);
     }
     else {
         child_process.execSync(`cp -r ${classContentPath}/${unit} ${gitlabContentPath} && cd ${gitlabContentPath}/${unit} && ${rmSolved} && ${addSandbox}`);
-        changesToPush.push(`unit ${unit} added`);
+        changeLog.pushToLog(`unit ${unit} added`);
     }
 }
 
@@ -82,27 +85,27 @@ const copyUnitSolved = unit => {
     let copyTo = `${gitlabContentPath}/${unit}/`;
 
     child_process.execSync(`cp -r ${copyFrom} ${copyTo}`);
-    changesToPush.push(`unit ${unit} solved added`);
+    changeLog.pushToLog(`unit ${unit} solved added`);
 }
 
 const removeUnit = (dir,unit) => {
     const rmUnit = `cd ${dir} && rm -rf ${unit}`;
     child_process.execSync(rmUnit);
-    const updateChanges = changesToPush.filter(e=>!e.includes(`unit ${unit} added`));
-    if(updateChanges.length === changesToPush.length){
-        changesToPush.push(`removed unit ${unit}`);
+    const updateChanges = changeLog.getLog().filter(e=>!e.includes(`unit ${unit} added`));
+    if(updateChanges.length === changeLog.getLog().length){
+        changeLog.pushToLog(`removed unit ${unit}`);
     }
-    else changesToPush = updateChanges;
+    else changeLog.updateLog(updateChanges);
 }
 
 const pushChanges = () => {
     let dirInGitlab = getSubDirs(GITLAB)[0];
     let gitlabContentPath = `${GITLAB}/${dirInGitlab}`;
-    let commitMessage = `${changesToPush.join(" and ")}`;
+    let commitMessage = `${changeLog.getLog().join(" and ")}`;
 
     if(commitMessage === "") commitMessage = "committing changes";
 
-    child_process.execSync(`cd ${gitlabContentPath} && git add -A && git commit -m "${changesToPush.join(" and ")}" && git push`);
+    child_process.execSync(`cd ${gitlabContentPath} && git add -A && git commit -m "${commitMessage}" && git push`);
 }
 
 const addSelectionSolved = (start,end,unit,activitiesPath,activities) => {
@@ -117,13 +120,13 @@ const addSelectionSolved = (start,end,unit,activitiesPath,activities) => {
     if(startIndex<=endIndex){
         for(let i = startIndex; i<=endIndex; i++){
             child_process.execSync(`cp -r ${activitiesPath}/${activities[i]} ${gitlabUnitActivitiesPath}`);
-            changesToPush.push(`solved added for ${activities[i]}`);
+            changeLog.pushToLog(`solved added for ${activities[i]}`);
         }
     }
     else {
         for(let i = startIndex; i>=endIndex; i--){
             child_process.execSync(`cp -r ${activitiesPath}/${activities[i]} ${gitlabUnitActivitiesPath}`);
-            changesToPush.push(`solved added for ${activities[i]}`);
+            changeLog.pushToLog(`solved added for ${activities[i]}`);
         }
     }
 }
@@ -140,21 +143,21 @@ const removeSelectionSolved = (start,end,unit,activities) => {
     if(startIndex<=endIndex){
         for(let i = startIndex; i<=endIndex; i++){
             child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activities[i]}/Solved`);
-            let filteredChanges = changesToPush.filter(change=>!change.includes(`solved added for ${activities[i]}`));
-            if(filteredChanges.length<changesToPush){
-                changesToPush = filteredChanges;
+            let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`solved added for ${activities[i]}`));
+            if(filteredChanges.length<changeLog.getLog().length){
+                changeLog.updateLog(filteredChanges);
             }
-            else changesToPush.push(`solved removed for ${activities[i]}`);
+            else changeLog.pushToLog(`solved removed for ${activities[i]}`);
         }
     }
     else {
         for(let i = startIndex; i>=endIndex; i--){
             child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activities[i]}/Solved`);
-            let filteredChanges = changesToPush.filter(change=>!change.includes(`solved added for ${activities[i]}`));
-            if(filteredChanges.length<changesToPush){
-                changesToPush = filteredChanges;
+            let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`solved added for ${activities[i]}`));
+            if(filteredChanges.length<changeLog.getLog().length){
+                changeLog.updateLog(filteredChanges);
             }
-            else changesToPush.push(`solved removed for ${activities[i]}`);
+            else changeLog.pushToLog(`solved removed for ${activities[i]}`);
         }
     }
 
@@ -472,7 +475,7 @@ const gitlabPromts = () =>
                 gitlabPromts();
                 break;
             case "Push":
-                if(changesToPush.length) pushChanges()
+                if(changeLog.getLog().length) pushChanges()
                 else console.info("No changes to push");
                 gitlabPromts();
                 break;

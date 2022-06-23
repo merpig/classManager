@@ -46,7 +46,7 @@ const nextUnit = arr => {
     else return "none";
 }
 
-const copyUnit = unit => {
+const copyUnitUnsolved = unit => {
     let dirInGithub = getSubDirs(GITHUB)[0];
     let dirInGitlab = getSubDirs(GITLAB)[0];
 
@@ -57,6 +57,22 @@ const copyUnit = unit => {
     const addSandbox = `mkdir 05-Sandbox && cd 05-Sandbox && echo # Sandbox folder for activities and testing code > README.md`
     child_process.execSync(`cp -r ${classContentPath}/${unit} ${gitlabContentPath} && cd ${gitlabContentPath}/${unit} && ${rmSolved} && ${addSandbox}`);
     changesToPush.push(`unit ${unit} added`);
+}
+
+const copyUnitSolved = unit => {
+    let dirInGithub = getSubDirs(GITHUB)[0];
+    let dirInGitlab = getSubDirs(GITLAB)[0];
+
+    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`
+    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`
+
+    let classActivities = getSubDirs(`${classContentPath}/${unit}`).filter(dir=>dir.includes("01"))[0];
+
+    let copyFrom = `${classContentPath}/${unit}/${classActivities}`;
+    let copyTo = `${gitlabContentPath}/${unit}/`;
+
+    child_process.execSync(`cp -r ${copyFrom} ${copyTo}`);
+    changesToPush.push(`unit ${unit} solved added`);
 }
 
 const removeUnit = (dir,unit) => {
@@ -75,7 +91,7 @@ const pushChanges = () => {
     child_process.execSync(`cd ${gitlabContentPath} && git add -A && git commit -m "${changesToPush.join(" ")}" && git push`)
 }
 
-const selectUnitToAdd = () => {
+const selectUnitToAdd = (type) => {
     let dirInGitlab = getSubDirs(GITLAB)[0];
     let gitlabContentPath = `${GITLAB}/${dirInGitlab}`
     let unitsInGitlab = getSubDirs(gitlabContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
@@ -84,6 +100,11 @@ const selectUnitToAdd = () => {
     let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`
     let unitsInGithub = getSubDirs(classContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
 
+    let units;
+
+    if(type === "unsolved") units = unitsInGithub.filter(unit=>!unitsInGitlab.includes(unit));
+    else units = unitsInGithub;
+
     inquirer
     .prompt([
         {
@@ -91,7 +112,7 @@ const selectUnitToAdd = () => {
             message: "Select unit to add:",
             type: "list",
             choices: [
-                ...unitsInGithub.filter(unit=>!unitsInGitlab.includes(unit)),
+                ...units,
                 "Back"
             ]
         }
@@ -102,7 +123,21 @@ const selectUnitToAdd = () => {
             case "Back":
                 break;
             default:
-                copyUnit(options);
+                if(type==="unsolved"){
+                    console.info(`Adding unit ${options}...`);
+                    copyUnitUnsolved(options);
+                    console.info(`Unit ${options} added. Make sure to select push to update gitlab.`);
+                }
+                else if(type==="solved"){
+                    console.info(`Adding all solved to unit ${options}...`);
+                    copyUnitSolved(options);
+                    console.info(`Unit ${options} all solved added. Make sure to select push to update gitlab.`);
+                }
+                else if(type==="removeAllSolved"){
+                    console.info(`Removing all solved from unit ${options}...`);
+                    copyUnitSolved(options);
+                    console.info(`All solved removed from unit ${options}.`);
+                }
         }
         gitlabPromts();
     })
@@ -138,7 +173,9 @@ const selectUnitToRemove = () => {
             case "Back":
                 break;
             default:
+                console.info(`Removing unit ${options}...`);
                 removeUnit(gitlabContentPath,options);
+                console.info(`Unit ${options} removed!`);
         }
         gitlabPromts();
     })
@@ -162,12 +199,19 @@ const promptForLink = async directory =>
         }
     ])
     .then(({link}) => {
-        try {
+        let baseLink = link.split("/")[0];
+        if(directory === GITHUB && baseLink!=="git@github.com:coding-boot-camp"){
+            console.info("Invalid link, please clone from a coding bootcamp repository.");
+            promptForLink(directory);
+        }
+        else {
+            try {
             console.log(`Cloning ${parseLinkRepo(link)} into ${directory}, this may take a few minutes.`);
             cloneIntoDirectory(directory,link);
             console.log(`The ${directory} directory is set up!`)
-        }catch(error){
-            console.log(error)
+            }catch(error){
+                console.log(error)
+            }
         }
     })
     .catch((error) => {
@@ -221,6 +265,9 @@ const githubPromts = () =>
             message: "Select an option:",
             type: "list",
             choices: [
+                // "Select unit to open",
+                // "Open all units",
+                // "Select lesson plan to open"
                 "Update",
                 "Back",
                 "Exit"
@@ -263,9 +310,10 @@ const gitlabPromts = () =>
                 "Current Units",
                 `Add next unit (${nextUnit(getSubDirs(`${GITLAB}/${getSubDirs(GITLAB)[0]}`))}) unsolved`,
                 "Add unit unsolved",
-                // "Add All Solved to Unit",
-                // "Add Selection of Solved to Unit",
-                // "Remove Solved from Unit",
+                "Add all solved to unit",
+                // "Add selection of solved to unit",
+                "Remove solved from unit",
+                // "Remove selection of solved from unit"
                 "Remove unit",
                 "Back",
                 "Exit"
@@ -292,7 +340,13 @@ const gitlabPromts = () =>
                 gitlabPromts();
                 break;
             case "Add unit unsolved":
-                selectUnitToAdd();
+                selectUnitToAdd("unsolved");
+                break;
+            case "Add all solved to unit":
+                selectUnitToAdd("solved");
+                break;
+            case "Remove solved from unit":
+                selectUnitToAdd("removeAllSolved");
                 break;
             case "Remove unit":
                 selectUnitToRemove();
@@ -306,7 +360,11 @@ const gitlabPromts = () =>
             default:
                 let unit = options.split("(")[1].split(")")[0];
                 if(unit === "none") console.info("No more units left to add!")
-                else copyUnit(unit);
+                else {
+                    console.info(`Adding unit ${unit}...`);
+                    copyUnitUnsolved(unit);
+                    console.info(`Unit ${unit} added! Make sure to select push to update gitlab.`);
+                }
                 gitlabPromts();
         }
     })
@@ -374,25 +432,29 @@ const init = async () => {
 
     // Create the directory for github instructional material
     if(!existsSync(GITHUB)) {
-        console.log("Initializing github folder...");
+        console.info("Initializing github folder...");
+        console.linfo("Make sure the ssh key has been added to github and access has been granted.")
         mkdirSync(GITHUB);
         await promptForLink(GITHUB);
     }
 
     if(existsSync(GITHUB) && !getSubDirs(GITHUB).length){
-        console.log("Initializing github folder...");
+        console.info("Initializing github folder...");
+        console.linfo("Make sure the ssh key has been added to github and access has been granted.")
         await promptForLink(GITHUB);
     }
 
     // Create the directory for gitlab class material
     if(!existsSync(GITLAB)) {
-        console.log("Initializing gitlab folder...");
+        console.info("Initializing gitlab folder...");
+        console.linfo("Make sure the ssh key has been added to gitlab and access has been granted.")
         mkdirSync(GITLAB);
         await promptForLink(GITLAB);
     }
 
     if(existsSync(GITLAB) && !getSubDirs(GITLAB).length){
-        console.log("Initializing gitlab folder...");
+        console.info("Initializing gitlab folder...");
+        console.linfo("Make sure the ssh key has been added to gitlab and access has been granted.")
         await promptForLink(GITLAB);
     }
 

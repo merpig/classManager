@@ -116,6 +116,7 @@ const pushChanges = () => {
     if(commitMessage === "") commitMessage = "committing changes";
 
     child_process.execSync(`cd ${gitlabContentPath} && git add -A && git commit -m "${commitMessage}" && git push`);
+    changeLog.updateLog([]);
 }
 
 const addSelectionSolved = (start,end,unit,activitiesPath,activities) => {
@@ -488,8 +489,12 @@ const gitlabPromts = () =>
                 gitlabPromts();
                 break;
             case "Push":
-                if(changeLog.getLog().length) pushChanges()
-                else console.info("No changes to push");
+                //if(changeLog.getLog().length) {
+                console.info("Pushing changes to gitlab...");
+                pushChanges();
+                console.info("Changes pushed up to gitlab.");
+                //}
+                //else console.info("No changes to push");
                 gitlabPromts();
                 break;
             case "Hard reset from origin":
@@ -540,6 +545,7 @@ const gitlabPromts = () =>
             console.log("Prompt failed in the current environment");
         } else {
             console.log(error);
+            gitlabPromts();
         }
     });
 

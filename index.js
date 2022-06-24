@@ -3,6 +3,16 @@ const { readdirSync, mkdirSync, existsSync } = require("fs");
 const child_process = require("child_process");
 const ChangeLog = require("./utils/changeLog.js");
 
+// General TODOS:
+// 1. Work on the changeLog messages
+// 2. More graceful error handling than just spitting out the raw error
+// 3. Filter selection of activities for adding and removing solved versions
+// 4. Add additional functionality to github
+//      - Open unit in vscode
+//      - Open all units in vscode
+//      - Open lesson plan in vscode
+// 5. Add documentation
+// 6. Add README content
 const changeLog = new ChangeLog();
 
 const GITHUB = "github";
@@ -120,13 +130,13 @@ const addSelectionSolved = (start,end,unit,activitiesPath,activities) => {
     if(startIndex<=endIndex){
         for(let i = startIndex; i<=endIndex; i++){
             child_process.execSync(`cp -r ${activitiesPath}/${activities[i]} ${gitlabUnitActivitiesPath}`);
-            changeLog.pushToLog(`solved added for ${activities[i]}`);
+            //changeLog.pushToLog(`solved added for ${activities[i]}`);
         }
     }
     else {
         for(let i = startIndex; i>=endIndex; i--){
             child_process.execSync(`cp -r ${activitiesPath}/${activities[i]} ${gitlabUnitActivitiesPath}`);
-            changeLog.pushToLog(`solved added for ${activities[i]}`);
+            //changeLog.pushToLog(`solved added for ${activities[i]}`);
         }
     }
 }
@@ -143,26 +153,29 @@ const removeSelectionSolved = (start,end,unit,activities) => {
     if(startIndex<=endIndex){
         for(let i = startIndex; i<=endIndex; i++){
             child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activities[i]}/Solved`);
-            let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`solved added for ${activities[i]}`));
-            if(filteredChanges.length<changeLog.getLog().length){
-                changeLog.updateLog(filteredChanges);
-            }
-            else changeLog.pushToLog(`solved removed for ${activities[i]}`);
+            //let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`solved added for ${activities[i]}`));
+            //if(filteredChanges.length<changeLog.getLog().length){
+                //changeLog.updateLog(filteredChanges);
+            //}
+            //else changeLog.pushToLog(`solved removed for ${activities[i]}`);
         }
     }
     else {
         for(let i = startIndex; i>=endIndex; i--){
             child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activities[i]}/Solved`);
-            let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`solved added for ${activities[i]}`));
-            if(filteredChanges.length<changeLog.getLog().length){
-                changeLog.updateLog(filteredChanges);
-            }
-            else changeLog.pushToLog(`solved removed for ${activities[i]}`);
+            //let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`solved added for ${activities[i]}`));
+            //if(filteredChanges.length<changeLog.getLog().length){
+                //changeLog.updateLog(filteredChanges);
+            //}
+            //else changeLog.pushToLog(`solved removed for ${activities[i]}`);
         }
     }
 
 }
 
+// TODO: 
+// 1. For selectionSolved only show activities that don't have a solved folder
+// 2. For removeSelection only show activities that have a solved folder
 const promptForSelection = (type,unit) => {
     let dirInGithub = getSubDirs(GITHUB)[0];
 

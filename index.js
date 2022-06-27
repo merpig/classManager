@@ -128,17 +128,9 @@ const addSelectionSolved = (start,end,unit,activitiesPath,activities) => {
     let gitlabUnitActivities = getSubDirs(gitlabContentPath).filter(dir=>dir.includes("01"))[0];
     let gitlabUnitActivitiesPath = `${gitlabContentPath}/${gitlabUnitActivities}`;
 
-    if(startIndex<=endIndex){
-        for(let i = startIndex; i<=endIndex; i++){
-            child_process.execSync(`cp -r ${activitiesPath}/${activities[i]} ${gitlabUnitActivitiesPath}`);
-            //changeLog.pushToLog(`solved added for ${activities[i]}`);
-        }
-    }
-    else {
-        for(let i = startIndex; i>=endIndex; i--){
-            child_process.execSync(`cp -r ${activitiesPath}/${activities[i]} ${gitlabUnitActivitiesPath}`);
-            //changeLog.pushToLog(`solved added for ${activities[i]}`);
-        }
+    for(let i = startIndex; i<=endIndex; startIndex<=endIndex ? i++ : i--){
+        child_process.execSync(`cp -r ${activitiesPath}/${activities[i]} ${gitlabUnitActivitiesPath}`);
+        //changeLog.pushToLog(`solved added for ${activities[i]}`);
     }
 }
 
@@ -151,26 +143,16 @@ const removeSelectionSolved = (start,end,unit,activities) => {
     let gitlabUnitActivities = getSubDirs(gitlabContentPath).filter(dir=>dir.includes("01"))[0];
     let gitlabUnitActivitiesPath = `${gitlabContentPath}/${gitlabUnitActivities}`;
 
-    if(startIndex<=endIndex){
-        for(let i = startIndex; i<=endIndex; i++){
-            child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activities[i]}/Solved`);
-            //let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`solved added for ${activities[i]}`));
-            //if(filteredChanges.length<changeLog.getLog().length){
-                //changeLog.updateLog(filteredChanges);
-            //}
-            //else changeLog.pushToLog(`solved removed for ${activities[i]}`);
-        }
+    
+    for(let i = startIndex; i<=endIndex; startIndex<=endIndex? i++ : i--){
+        child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activities[i]}/Solved`);
+        //let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`solved added for ${activities[i]}`));
+        //if(filteredChanges.length<changeLog.getLog().length){
+            //changeLog.updateLog(filteredChanges);
+        //}
+        //else changeLog.pushToLog(`solved removed for ${activities[i]}`);
     }
-    else {
-        for(let i = startIndex; i>=endIndex; i--){
-            child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activities[i]}/Solved`);
-            //let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`solved added for ${activities[i]}`));
-            //if(filteredChanges.length<changeLog.getLog().length){
-                //changeLog.updateLog(filteredChanges);
-            //}
-            //else changeLog.pushToLog(`solved removed for ${activities[i]}`);
-        }
-    }
+    
 
 }
 
@@ -276,6 +258,7 @@ const selectUnitToAdd = (type) => {
         
         switch(options){
             case "Back":
+                gitlabPromts();
                 break;
             default:
                 if(type==="unsolved"){

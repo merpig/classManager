@@ -1,5 +1,5 @@
 const inquirer = require("inquirer");
-const { readdirSync, mkdirSync, existsSync } = require("fs");
+const { readdirSync, mkdirSync, existsSync, lstatSync } = require("fs");
 const child_process = require("child_process");
 const ChangeLog = require("./utils/changeLog.js");
 
@@ -106,6 +106,12 @@ const removeUnit = (dir,unit) => {
         changeLog.pushToLog(`removed unit ${unit}`);
     }
     else changeLog.updateLog(updateChanges);
+}
+
+const openAtPath = (path) => {
+    console.info(`Opening ${path}...`);
+    child_process.execSync(`code ${path}`);
+    console.info(`${path} opened.`);
 }
 
 const pushChanges = () => {
@@ -239,6 +245,11 @@ const selectUnitToAdd = (type) => {
         else if(type==="selectionSolved") message = "Select unit to add selection of solved to:";
         else if(type==="removeAllSolved") message = "Select unit to remove all solved from:";
         else if(type==="removeSelectionSolved") message = "Select unit to remove selection of solved from:";
+        else if(type==="unitToOpen") message = "Select unit to open:";
+        else if(type==="openAllUnits"){
+            openAtPath(classContentPath);
+            return githubPromts();
+        }
         units = unitsInGitlab;
     }
 
@@ -258,7 +269,8 @@ const selectUnitToAdd = (type) => {
         
         switch(options){
             case "Back":
-                gitlabPromts();
+                if(type==="unitToOpen"||type==="openAllUnits") githubPromts();
+                else gitlabPromts();
                 break;
             default:
                 if(type==="unsolved"){
@@ -278,6 +290,10 @@ const selectUnitToAdd = (type) => {
                     copyUnitUnsolved(options,type);
                     console.info(`All solved removed from unit ${options}.`);
                     gitlabPromts();
+                }
+                else if(type==="unitToOpen"){
+                    openAtPath(`${classContentPath}/${options}`);
+                    githubPromts();
                 }
                 else {
                     // Prompt for a selection
@@ -330,6 +346,64 @@ const selectUnitToRemove = () => {
         } else {
             console.log(error)
             gitlabPromts();
+        }
+    });
+}
+
+const selectLessonPlan = (path) => {
+    const dirs = getSubDirs(path).filter(dir=>dir[0]!=="."&&dir[0]!=="R");
+
+    inquirer
+    .prompt([
+        {
+            name: "options",
+            message: "Select a directory",
+            type: "list",
+            choices: [
+                "Open in vscode",
+                ...dirs,
+                "Back",
+                "Return to github prompts",
+                "Exit"
+            ]
+        }
+    ])
+    .then(({options})=>{
+        switch(options){
+            case "Open in vscode":
+                openAtPath(path);
+                githubPromts();
+                break;
+            case "Back":
+                if(dirs.includes("Full-Time")) githubPromts();
+                else {
+                    let newPath = path.split("/");
+                    newPath.pop();
+                    selectLessonPlan(newPath.join("/"))
+                }
+                break;
+            case "Return to github prompts":
+                githubPromts();
+                break;
+            case "Exit":
+                break;
+            default:
+                const newPath = `${path}/${options}`;
+                if(!lstatSync(newPath).isFile()) {
+                    selectLessonPlan(newPath);
+                }
+                else {
+                    openAtPath(newPath);
+                    githubPromts();
+                }
+        }
+    })
+    .catch((error) => {
+        if (error.isTtyError) {
+            console.log("Prompt failed in the current environment");
+        } else {
+            console.log(error)
+            promptForLink(directory)
         }
     });
 }
@@ -410,9 +484,9 @@ const githubPromts = () =>
             message: "Select an option:",
             type: "list",
             choices: [
-                // "Select unit to open",
-                // "Open all units",
-                // "Select lesson plan to open"
+                "Select unit to open",
+                "Open all units",
+                "Select lesson plan to open",
                 "Update",
                 "Back",
                 "Exit"
@@ -420,6 +494,17 @@ const githubPromts = () =>
         }
     ]).then(({options})=>{
         switch(options){
+            case "Select unit to open":
+                selectUnitToAdd("unitToOpen");
+                break;
+            case "Open all units":
+                selectUnitToAdd("openAllUnits");
+                break;
+            case "Select lesson plan to open":
+                let dirInGithub = getSubDirs(GITHUB)[0];
+                let lessonPlanPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("02"))[0]}`;
+                selectLessonPlan(lessonPlanPath);
+                break;
             case "Update":
                 console.info(`Updating ${getSubDirs(GITHUB)[0]}...`)
                 hardUpdateDirectory(GITHUB + "/" + getSubDirs(GITHUB)[0]);

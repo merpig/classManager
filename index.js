@@ -174,10 +174,10 @@ const promptForSelection = (type,unit) => {
     let activitiesName = getSubDirs(unitPath).filter(activity=>activity[0]!=="."&&activity[0]!=="R").filter(dir=>dir.includes("01"))[0];
     let activitiesPath = `${unitPath}/${activitiesName}`;
 
-    let activities = getSubDirs(activitiesPath).filter(activity=>activity[0]!=="."&&activity[0]!=="R"&&!activity.includes("Ins"));
+    let activities = getSubDirs(activitiesPath).filter(activity=>activity[0]!=="."&&activity[0]!=="R"&&activity.includes("Stu"));
 
-    let messageStart = "Select start activity to " + type==="selectionSolved"? "add solved to:":"remove solved from:";
-    let messageEnd = "Select end activity to " + type==="selectionSolved"?"add solved to:":"remove solved from:";
+    let messageStart = "Select start activity to " + (type==="selectionSolved"? "add solved to:":"remove solved from:");
+    let messageEnd = "Select end activity to " + (type==="selectionSolved"?"add solved to:":"remove solved from:");
 
     inquirer
     .prompt([
@@ -233,8 +233,6 @@ const selectUnitToAdd = (type) => {
 
     let units;
     let message;
-
-    console.log(type);
 
     if(type === "unsolved") {
         message = "Select unit to add:";

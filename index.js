@@ -18,6 +18,11 @@ const changeLog = new ChangeLog();
 const GITHUB = "github";
 const GITLAB = "gitlab";
 
+const ERROR_COLOR = "\x1b[31m%s\x1b[0m";
+const WARNING_COLOR = "\x1b[33m%s\x1b[0m";
+const SUCCESS_COLOR = "\x1b[32m%s\x1b[0m";
+const INFO_COLOR = "\x1b[34m%s\x1b[0m";
+
 let changesToPush = [];
 
 const getSubDirs = (directory) => readdirSync(directory);
@@ -32,7 +37,7 @@ const cloneIntoDirectory = (directory,link) =>
     child_process.execSync(`cd ${directory} && git clone ${link}`);
 
 const updateDirectory = (directory) =>{
-    child_process.execSync(`cd ${directory} && git add -A && git commit -m "committed" && git pull`);
+    child_process.execSync(`cd ${directory} && git pull`);
 }
 
 const hardUpdateDirectory = (directory,subDir) =>{
@@ -49,9 +54,9 @@ const nextUnit = arr => {
     unitValue = unitValue.toString(); 
     unitValue = unitValue.length < 2 ? "0"+unitValue : unitValue;
 
-    let dirInGithub = getSubDirs(GITHUB)[0];
-    let githubDirs = getSubDirs(`${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`);
-    let matchedDir = githubDirs.filter(unit=>unit.includes(unitValue));
+    const dirInGithub = getSubDirs(GITHUB)[0];
+    const githubDirs = getSubDirs(`${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`);
+    const matchedDir = githubDirs.filter(unit=>unit.includes(unitValue));
 
     if(matchedDir.length){
         return matchedDir[0];
@@ -60,17 +65,17 @@ const nextUnit = arr => {
 }
 
 const copyUnitUnsolved = (unit,type) => {
-    let dirInGithub = getSubDirs(GITHUB)[0];
-    let dirInGitlab = getSubDirs(GITLAB)[0];
+    const dirInGithub = getSubDirs(GITHUB)[0];
+    const dirInGitlab = getSubDirs(GITLAB)[0];
 
-    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`;
-    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`;
+    const classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`;
+    const gitlabContentPath = `${GITLAB}/${dirInGitlab}`;
 
     const rmSolved = `rm -rf 01-Activities/*/Solved 01-Activities/*/Main 02-Homework/Master 02-Homework/Main 02-Challenge/Main 03-Algorithms/*/Solved`;
     const addSandbox = `mkdir 05-Sandbox && cd 05-Sandbox && echo # Sandbox folder for activities and testing code > README.md`;
     if(type==="removeAllSolved"){
         child_process.execSync(`cp -r ${classContentPath}/${unit} ${gitlabContentPath} && cd ${gitlabContentPath}/${unit} && ${rmSolved}`);
-        let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`unit ${unit} solved added`));
+        const filteredChanges = changeLog.getLog().filter(change=>!change.includes(`unit ${unit} solved added`));
         if(filteredChanges.length<changeLog.getLog().length){
             changeLog.updateLog(filteredChanges);
         }
@@ -80,22 +85,6 @@ const copyUnitUnsolved = (unit,type) => {
         child_process.execSync(`cp -r ${classContentPath}/${unit} ${gitlabContentPath} && cd ${gitlabContentPath}/${unit} && ${rmSolved} && ${addSandbox}`);
         changeLog.pushToLog(`unit ${unit} added`);
     }
-}
-
-const copyUnitSolved = unit => {
-    let dirInGithub = getSubDirs(GITHUB)[0];
-    let dirInGitlab = getSubDirs(GITLAB)[0];
-
-    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`
-    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`
-
-    let classActivities = getSubDirs(`${classContentPath}/${unit}`).filter(dir=>dir.includes("01"))[0];
-
-    let copyFrom = `${classContentPath}/${unit}/${classActivities}`;
-    let copyTo = `${gitlabContentPath}/${unit}/`;
-
-    child_process.execSync(`cp -r ${copyFrom} ${copyTo}`);
-    changeLog.pushToLog(`unit ${unit} solved added`);
 }
 
 const removeUnit = (dir,unit) => {
@@ -109,14 +98,14 @@ const removeUnit = (dir,unit) => {
 }
 
 const openAtPath = (path) => {
-    console.info(`Opening ${path}...`);
+    console.info(INFO_COLOR, `Opening ${path}...`);
     child_process.execSync(`code ${path}`);
-    console.info(`${path} opened.`);
+    console.info(SUCCESS_COLOR, `${path} opened.`);
 }
 
 const pushChanges = () => {
-    let dirInGitlab = getSubDirs(GITLAB)[0];
-    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`;
+    const dirInGitlab = getSubDirs(GITLAB)[0];
+    const gitlabContentPath = `${GITLAB}/${dirInGitlab}`;
     let commitMessage = `${changeLog.getLog().join(" and ")}`;
 
     if(commitMessage === "") commitMessage = "committing changes";
@@ -126,58 +115,94 @@ const pushChanges = () => {
 }
 
 const addSelectionSolved = (start,end,unit,activitiesPath,activities) => {
-    let startIndex = activities.indexOf(start);
-    let endIndex = activities.indexOf(end);
+    const startIndex = activities.indexOf(start);
+    const endIndex = activities.indexOf(end);
 
-    let dirInGitlab = getSubDirs(GITLAB)[0];
-    let gitlabContentPath = `${GITLAB}/${dirInGitlab}/${unit}`;
-    let gitlabUnitActivities = getSubDirs(gitlabContentPath).filter(dir=>dir.includes("01"))[0];
-    let gitlabUnitActivitiesPath = `${gitlabContentPath}/${gitlabUnitActivities}`;
+    const dirInGitlab = getSubDirs(GITLAB)[0];
+    const gitlabContentPath = `${GITLAB}/${dirInGitlab}/${unit}`;
+    const gitlabUnitActivities = getSubDirs(gitlabContentPath).filter(dir=>dir.includes("01"))[0];
+    const gitlabUnitActivitiesPath = `${gitlabContentPath}/${gitlabUnitActivities}`;
 
     for(let i = startIndex; i<=endIndex; startIndex<=endIndex ? i++ : i--){
-        child_process.execSync(`cp -r ${activitiesPath}/${activities[i]} ${gitlabUnitActivitiesPath}`);
+        const activity = activities[i];
+        const extension = (activity.includes("Project")?"Main":"Solved");
+        child_process.execSync(`cp -r ${activitiesPath}/${activities[i]}/${extension} ${gitlabUnitActivitiesPath}/${activity}`);
         //changeLog.pushToLog(`solved added for ${activities[i]}`);
     }
 }
 
 const removeSelectionSolved = (start,end,unit,activities) => {
-    let startIndex = activities.indexOf(start);
-    let endIndex = activities.indexOf(end);
+    const startIndex = activities.indexOf(start);
+    const endIndex = activities.indexOf(end);
 
-    let dirInGitlab = getSubDirs(GITLAB)[0];
-    let gitlabContentPath = `${GITLAB}/${dirInGitlab}/${unit}`
-    let gitlabUnitActivities = getSubDirs(gitlabContentPath).filter(dir=>dir.includes("01"))[0];
-    let gitlabUnitActivitiesPath = `${gitlabContentPath}/${gitlabUnitActivities}`;
+    const dirInGitlab = getSubDirs(GITLAB)[0];
+    const gitlabContentPath = `${GITLAB}/${dirInGitlab}/${unit}`
+    const gitlabUnitActivities = getSubDirs(gitlabContentPath).filter(dir=>dir.includes("01"))[0];
+    const gitlabUnitActivitiesPath = `${gitlabContentPath}/${gitlabUnitActivities}`;
 
-    
     for(let i = startIndex; i<=endIndex; startIndex<=endIndex? i++ : i--){
-        child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activities[i]}/Solved`);
+        const activity = activities[i];
+        const extension = activity.includes("Project")?"Main":"Solved";
+        child_process.execSync(`rm -rf ${gitlabUnitActivitiesPath}/${activity}/${extension}`);
         //let filteredChanges = changeLog.getLog().filter(change=>!change.includes(`solved added for ${activities[i]}`));
         //if(filteredChanges.length<changeLog.getLog().length){
             //changeLog.updateLog(filteredChanges);
         //}
         //else changeLog.pushToLog(`solved removed for ${activities[i]}`);
     }
-    
-
 }
 
-// TODO: 
-// 1. For selectionSolved only show activities that don't have a solved folder
-// 2. For removeSelection only show activities that have a solved folder
 const promptForSelection = (type,unit) => {
-    let dirInGithub = getSubDirs(GITHUB)[0];
+    const dirInGithub = getSubDirs(GITHUB)[0];
 
-    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`;
-    let unitPath = `${classContentPath}/${unit}`;
+    const classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`;
+    const unitPath = `${classContentPath}/${unit}`;
 
-    let activitiesName = getSubDirs(unitPath).filter(activity=>activity[0]!=="."&&activity[0]!=="R").filter(dir=>dir.includes("01"))[0];
-    let activitiesPath = `${unitPath}/${activitiesName}`;
+    const activitiesName = getSubDirs(unitPath).filter(activity=>activity[0]!=="."&&activity[0]!=="R").filter(dir=>dir.includes("01"))[0];
+    const activitiesPath = `${unitPath}/${activitiesName}`;
 
-    let activities = getSubDirs(activitiesPath).filter(activity=>activity[0]!=="."&&activity[0]!=="R"&&activity.includes("Stu"));
+    const dirInGitlab = getSubDirs(GITLAB)[0];
+    const gitlabContentPath = `${GITLAB}/${dirInGitlab}/${unit}`;
+    const gitlabUnitActivitiesDir = getSubDirs(gitlabContentPath).filter(dir=>dir.includes("01"))[0];
+    const gitlabUnitActivitiesPath = `${gitlabContentPath}/${gitlabUnitActivitiesDir}`;
+    let activities = getSubDirs(gitlabUnitActivitiesPath).filter(e=>e[0]!=="."&&e[0]!=="R"&&e.includes("Stu"));
 
-    let messageStart = "Select start activity to " + (type==="selectionSolved"? "add solved to:":"remove solved from:");
-    let messageEnd = "Select end activity to " + (type==="selectionSolved"?"add solved to:":"remove solved from:");
+    activities = activities.filter((e,i)=>{
+        const gitlabUnitActivity = e;
+        const gitlabUnitActivityContents = getSubDirs(`${gitlabUnitActivitiesPath}/${gitlabUnitActivity}`);
+        const includesSolved = gitlabUnitActivityContents.includes("Solved");
+        const includesMain = gitlabUnitActivityContents.includes("Main");
+        //console.log(e,includesSolved)
+        if(gitlabUnitActivity.includes("Project")) {
+            return ((type==="selectionSolved"||type==="solved")? !includesMain : includesMain);
+        }
+        else return ((type==="selectionSolved"||type==="solved")? !includesSolved : includesSolved);
+    });
+    
+    if((type==="selectionSolved" || type==="solved") && !activities.length){
+        console.info(WARNING_COLOR, "All solved already added.");
+        gitlabPromts();
+        return;
+    }
+    else if((type==="removeSelectionSolved" || type ==="removeAllSolved") && !activities.length){
+        console.info(WARNING_COLOR, "No solved to remove.");
+        gitlabPromts();
+        return;
+    }
+
+    if(type==="solved"){
+        addSelectionSolved(activities[0],activities[activities.length-1],unit,activitiesPath,activities);
+        console.info(SUCCESS_COLOR, `Unit ${unit} all solved added. Make sure to select push to update gitlab.`);
+        return gitlabPromts();
+    }
+    else if(type==="removeAllSolved"){
+        removeSelectionSolved(activities[0],activities[activities.length-1],unit,activities);
+        console.info(SUCCESS_COLOR, `All solved removed from unit ${unit}.`);
+        return gitlabPromts();
+    }
+
+    const messageStart = "Select start activity to " + (type==="selectionSolved"? "add solved to:":"remove solved from:");
+    const messageEnd = "Select end activity to " + (type==="selectionSolved"?"add solved to:":"remove solved from:");
 
     inquirer
     .prompt([
@@ -200,36 +225,36 @@ const promptForSelection = (type,unit) => {
     ])
     .then(({start,end})=>{
         if(type==="selectionSolved"){
-            console.info(`Adding solved activites ${start} through ${end} to unit ${unit}...`);
+            console.info(INFO_COLOR, `Adding solved activites ${start} through ${end} to unit ${unit}...`);
             addSelectionSolved(start,end,unit,activitiesPath,activities);
-            console.info(`Added solved activites ${start} through ${end} to unit ${unit}.`);
+            console.info(SUCCESS_COLOR, `Added solved activites ${start} through ${end} to unit ${unit}.`);
             gitlabPromts();
         }
         else {
-            console.info(`Removing solved activites ${start} through ${end} from unit ${unit}...`);
+            console.info(INFO_COLOR, `Removing solved activites ${start} through ${end} from unit ${unit}...`);
             removeSelectionSolved(start,end,unit,activities);
-            console.info(`Removed solved activites ${start} through ${end} from unit ${unit}...`);
+            console.info(SUCCESS_COLOR, `Removed solved activites ${start} through ${end} from unit ${unit}...`);
             gitlabPromts();
         }
     })
     .catch((error) => {
         if (error.isTtyError) {
-            console.log("Prompt failed in the current environment");
+            console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
-            console.log(error)
+            console.log(ERROR_COLOR, error.message)
             gitlabPromts();
         }
     });
 }
 
 const selectUnitToAdd = (type) => {
-    let dirInGitlab = getSubDirs(GITLAB)[0];
-    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`;
-    let unitsInGitlab = getSubDirs(gitlabContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
+    const dirInGitlab = getSubDirs(GITLAB)[0];
+    const gitlabContentPath = `${GITLAB}/${dirInGitlab}`;
+    const unitsInGitlab = getSubDirs(gitlabContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
 
-    let dirInGithub = getSubDirs(GITHUB)[0];
-    let classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`;
-    let unitsInGithub = getSubDirs(classContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
+    const dirInGithub = getSubDirs(GITHUB)[0];
+    const classContentPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("01"))[0]}`;
+    const unitsInGithub = getSubDirs(classContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
 
     let units;
     let message;
@@ -248,7 +273,8 @@ const selectUnitToAdd = (type) => {
             openAtPath(classContentPath);
             return githubPromts();
         }
-        units = unitsInGitlab;
+        if(type==="unitToOpen") units = unitsInGitlab;
+        else units = unitsInGitlab.filter(e=>!e.includes("Project"));
     }
 
     inquirer
@@ -272,22 +298,18 @@ const selectUnitToAdd = (type) => {
                 break;
             default:
                 if(type==="unsolved"){
-                    console.info(`Adding unit ${options}...`);
+                    console.info(INFO_COLOR, `Adding unit ${options}...`);
                     copyUnitUnsolved(options);
-                    console.info(`Unit ${options} added. Make sure to select push to update gitlab.`);
+                    console.info(SUCCESS_COLOR, `Unit ${options} added. Make sure to select push to update gitlab.`);
                     gitlabPromts();
                 }
                 else if(type==="solved"){
-                    console.info(`Adding all solved to unit ${options}...`);
-                    copyUnitSolved(options);
-                    console.info(`Unit ${options} all solved added. Make sure to select push to update gitlab.`);
-                    gitlabPromts();
+                    console.info(INFO_COLOR, `Adding all solved to unit ${options}...`);
+                    promptForSelection(type,options);
                 }
                 else if(type==="removeAllSolved"){
-                    console.info(`Removing all solved from unit ${options}...`);
-                    copyUnitUnsolved(options,type);
-                    console.info(`All solved removed from unit ${options}.`);
-                    gitlabPromts();
+                    console.info(INFO_COLOR, `Removing all solved from unit ${options}...`);
+                    promptForSelection(type,options);
                 }
                 else if(type==="unitToOpen"){
                     openAtPath(`${classContentPath}/${options}`);
@@ -302,18 +324,18 @@ const selectUnitToAdd = (type) => {
     })
     .catch((error) => {
         if (error.isTtyError) {
-            console.log("Prompt failed in the current environment");
+            console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
-            console.log(error)
+            console.log(ERROR_COLOR, error.message);
             gitlabPromts();
         }
     });
 }
 
 const selectUnitToRemove = () => {
-    let dirInGitlab = getSubDirs(GITLAB)[0];
-    let gitlabContentPath = `${GITLAB}/${dirInGitlab}`
-    let unitsInGitlab = getSubDirs(gitlabContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
+    const dirInGitlab = getSubDirs(GITLAB)[0];
+    const gitlabContentPath = `${GITLAB}/${dirInGitlab}`
+    const unitsInGitlab = getSubDirs(gitlabContentPath).filter(e=>e[0]!=="."&&e[0]!=="R");
 
     inquirer
     .prompt([
@@ -332,17 +354,17 @@ const selectUnitToRemove = () => {
             case "Back":
                 break;
             default:
-                console.info(`Removing unit ${options}...`);
+                console.info(INFO_COLOR, `Removing unit ${options}...`);
                 removeUnit(gitlabContentPath,options);
-                console.info(`Unit ${options} removed!`);
+                console.info(SUCCESS_COLOR, `Unit ${options} removed.`);
         }
         gitlabPromts();
     })
     .catch((error) => {
         if (error.isTtyError) {
-            console.log("Prompt failed in the current environment");
+            console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
-            console.log(error)
+            console.log(ERROR_COLOR, error.message);
             gitlabPromts();
         }
     });
@@ -375,7 +397,7 @@ const selectLessonPlan = (path) => {
             case "Back":
                 if(dirs.includes("Full-Time")) githubPromts();
                 else {
-                    let newPath = path.split("/");
+                    const newPath = path.split("/");
                     newPath.pop();
                     selectLessonPlan(newPath.join("/"))
                 }
@@ -398,10 +420,10 @@ const selectLessonPlan = (path) => {
     })
     .catch((error) => {
         if (error.isTtyError) {
-            console.log("Prompt failed in the current environment");
+            console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
-            console.log(error)
-            promptForLink(directory)
+            console.log(ERROR_COLOR, error.message);
+            promptForLink(directory);
         }
     });
 }
@@ -416,27 +438,27 @@ const promptForLink = async directory =>
         }
     ])
     .then(({link}) => {
-        let baseLink = link.split("/")[0];
+        const baseLink = link.split("/")[0];
         if(directory === GITHUB && baseLink!=="git@github.com:coding-boot-camp"){
-            console.info("Invalid link, please clone from a coding bootcamp repository.");
+            console.info(ERROR_COLOR, "Invalid link, please clone from a coding bootcamp repository.");
             promptForLink(directory);
         }
         else {
             try {
-            console.log(`Cloning ${parseLinkRepo(link)} into ${directory}, this may take a few minutes.`);
+            console.log(INFO_COLOR, `Cloning ${parseLinkRepo(link)} into ${directory}, this may take a few minutes.`);
             cloneIntoDirectory(directory,link);
-            console.log(`The ${directory} directory is set up!`)
+            console.log(SUCCESS_COLOR, `The ${directory} directory is set up!`)
             }catch(error){
-                console.log(error)
+                console.log(ERROR_COLOR, error.message);
             }
         }
     })
     .catch((error) => {
         if (error.isTtyError) {
-            console.log("Prompt failed in the current environment");
+            console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
-            console.log(error)
-            promptForLink(directory)
+            console.log(ERROR_COLOR, error.message);
+            promptForLink(directory);
         }
     });
 
@@ -457,20 +479,20 @@ const advancedPrompts = () =>
         switch(options){
             case "Reset Class Manager":
                 child_process.execSync(`rm -rf github gitlab`);
-                console.log("Exiting Class Manager");
+                console.log(INFO_COLOR, "Exiting Class Manager");
                 break;
             case "Back":
                 basePromts();
                 break;
             default:
-                console.log("Exiting Class Manager");
+                console.log(INFO_COLOR, "Exiting Class Manager");
         }
     })
     .catch((error) => {
         if (error.isTtyError) {
-            console.log("Prompt failed in the current environment");
+            console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
-            console.log(error)
+            console.log(ERROR_COLOR, error.message);
         }
     });
 
@@ -499,28 +521,28 @@ const githubPromts = () =>
                 selectUnitToAdd("openAllUnits");
                 break;
             case "Select lesson plan to open":
-                let dirInGithub = getSubDirs(GITHUB)[0];
-                let lessonPlanPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("02"))[0]}`;
+                const dirInGithub = getSubDirs(GITHUB)[0];
+                const lessonPlanPath = `${GITHUB}/${dirInGithub}/${getSubDirs(`${GITHUB}/${dirInGithub}`).filter(dir=>dir.includes("02"))[0]}`;
                 selectLessonPlan(lessonPlanPath);
                 break;
             case "Update":
-                console.info(`Updating ${getSubDirs(GITHUB)[0]}...`)
+                console.info(INFO_COLOR, `Updating ${getSubDirs(GITHUB)[0]}...`)
                 hardUpdateDirectory(GITHUB + "/" + getSubDirs(GITHUB)[0]);
-                console.info(`Updated!`);
+                console.info(SUCCESS_COLOR, `Updated!`);
                 githubPromts();
                 break;
             case "Back":
                 basePromts();
                 break;
             default:
-                console.log("Exiting Class Manager");
+                console.log(INFO_COLOR, "Exiting Class Manager");
         }
     })
     .catch((error) => {
         if (error.isTtyError) {
-            console.log("Prompt failed in the current environment");
+            console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
-            console.log(error)
+            console.log(ERROR_COLOR, error.message);
         }
     });
 
@@ -556,9 +578,9 @@ const gitlabPromts = () =>
                 break;
             case "Push":
                 //if(changeLog.getLog().length) {
-                console.info("Pushing changes to gitlab...");
+                console.info(INFO_COLOR, "Pushing changes to gitlab...");
                 pushChanges();
-                console.info("Changes pushed up to gitlab.");
+                console.info(SUCCESS_COLOR, "Changes pushed up to gitlab.");
                 //}
                 //else console.info("No changes to push");
                 gitlabPromts();
@@ -575,6 +597,7 @@ const gitlabPromts = () =>
                 selectUnitToAdd("unsolved");
                 break;
             case "Add all solved to unit":
+                // Make changes to this so it loops to add all so the whole unit isn't copied
                 selectUnitToAdd("solved");
                 break;
             case "Add selection of solved to unit":
@@ -593,24 +616,24 @@ const gitlabPromts = () =>
                 basePromts();
                 break;
             case "Exit":
-                console.log("Exiting Class Manager");
+                console.log(INFO_COLOR, "Exiting Class Manager");
                 break;
             default:
-                let unit = options.split("(")[1].split(")")[0];
-                if(unit === "none") console.info("No more units left to add!");
+                const unit = options.split("(")[1].split(")")[0];
+                if(unit === "none") console.info(WARNING_COLOR, "No more units left to add!");
                 else {
-                    console.info(`Adding unit ${unit}...`);
+                    console.info(INFO_COLOR, `Adding unit ${unit}...`);
                     copyUnitUnsolved(unit);
-                    console.info(`Unit ${unit} added! Make sure to select push to update gitlab.`);
+                    console.info(SUCCESS_COLOR, `Unit ${unit} added! Make sure to select push to update gitlab.`);
                 }
                 gitlabPromts();
         }
     })
     .catch((error) => {
         if (error.isTtyError) {
-            console.log("Prompt failed in the current environment");
+            console.info(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
-            console.log(error);
+            console.log(ERROR_COLOR, error.message);
             gitlabPromts();
         }
     });
@@ -633,13 +656,13 @@ const basePromts = () =>
         switch(options){
             case "Manage github":
                 if(!existsSync(GITHUB)) {
-                    console.log("Initializing github folder...");
+                    console.log(INFO_COLOR, "Initializing github folder...");
                     mkdirSync(GITHUB);
                     await promptForLink(GITHUB);
                     basePromts();
                 }
                 else if(!getSubDirs(GITHUB).length){
-                    console.log("Initializing github folder...");
+                    console.log(INFO_COLOR, "Initializing github folder...");
                     await promptForLink(GITHUB);
                     basePromts();
                 }
@@ -652,14 +675,14 @@ const basePromts = () =>
                 advancedPrompts();
                 break;
             default:
-                console.log("Exiting Class Manager");
+                console.log(INFO_COLOR, "Exiting Class Manager");
         }
     })
     .catch((error) => {
         if (error.isTtyError) {
-            console.log("Prompt failed in the current environment");
+            console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
-            console.log(error)
+            console.log(ERROR_COLOR, error.message);
         }
     });
 

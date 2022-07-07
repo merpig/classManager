@@ -1,3 +1,5 @@
 node_modules/
-github/
-gitlab/
+instructor/
+student/
+basePaths.json/
+utils/changelog.json

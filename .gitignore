@@ -1,5 +1,7 @@
 node_modules/
 instructor/
 student/
-basePaths.json/
+basePaths.json
 utils/changelog.json
+github/
+gitlab/

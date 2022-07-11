@@ -6,26 +6,33 @@ const { readdirSync, mkdirSync, existsSync, lstatSync, readFileSync, writeFileSy
  * @returns {Array}
  * Returns the contents of the path.
  */
-const pathContents = (path) => readdirSync(path);
-
+const pathContents = (path) => {
+    return readdirSync(path);
+}
 /**
  * 
  * @param {string} path 
  * @returns {Array}
  * Returns the contents of the path with no hidden or README files
  */
-const pathContentsFiltered = path => 
-    pathContents(path).filter(dir=>dir[0]!=="."&&dir[0]!=="R");
-
+const pathContentsFiltered = path => {
+    return pathContents(path).filter(dir=>dir[0]!=="."&&dir[0]!=="R");
+}
 /**
  * 
  * @param {string} path 
  * @returns {Array}
  * Return the directories of the path.
  */
-const pathDirs = path => 
-    pathContents(path).filter(e=>!lstatSync(path+"/"+e).isFile()&&e[0]!==".");
-
+const pathDirs = path => {
+    return pathContents(path).filter( e => {
+        try{
+            return !lstatSync(path+(path==="/"?"":"/")+e).isFile() && e[0]!=="."
+        } catch(e){
+            return false;
+        }
+    });
+}
 /**
  * 
  * @returns {Object}

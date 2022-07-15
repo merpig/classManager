@@ -1,13 +1,15 @@
 const inquirer = require("inquirer");
 const cm = require("../utils/cm");
-const choosePathing = require("./choosePathing");
+const selectedPaths = require("./selectedPaths");
 const basePrompts = require("./basePrompts");
 const fileManager = require("../utils/fileManager");
 const {EXIT,BACK,ERROR_COLOR,INFO_COLOR} = require("../utils/constants");
 
 const selectExistingPath = (path,type,exists,cbPrompts) => {
-    const dirs = cm.pathDirs(path);
     console.info(INFO_COLOR,`Current path: ${path}`);
+
+    const msg = exists ? "for existing" : "to save";
+    const dirs = cm.pathDirs(path);
     const choices = [
         "\033[32mSelect this path\x1b[0m",
         ...dirs,
@@ -19,7 +21,7 @@ const selectExistingPath = (path,type,exists,cbPrompts) => {
         .prompt([
             {
                 name: "options",
-                message: `Select an option for existing ${type} content:`,
+                message: `Select an option ${msg} ${type} content:`,
                 type: "list",
                 choices
             }
@@ -27,9 +29,15 @@ const selectExistingPath = (path,type,exists,cbPrompts) => {
             console.clear();
             switch(options){
                 case "\033[32mSelect this path\x1b[0m":
-                    fileManager.updateBasePaths(path,type);
-                    if(type==="instructor") selectExistingPath('/','student',exists);
-                    else basePrompts();
+                    if(exists){
+                        fileManager.updateBasePaths(path,type);
+                        if(type==="instructor") selectExistingPath('/','student',exists);
+                        else basePrompts();
+                    }
+                    else {
+                        if(type==="instructor") selectedPaths(path,'instructor',()=>selectExistingPath('/','student',exists));
+                        else selectedPaths(path,'student',basePrompts);
+                    }
                     break;
                 case BACK:
                     if(path==="/") cbPrompts();

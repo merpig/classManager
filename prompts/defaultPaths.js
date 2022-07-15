@@ -4,32 +4,38 @@ const {EXIT,BACK,ERROR_COLOR,WARNING_COLOR,SUCCESS_COLOR,INFO_COLOR} = require("
 
 const defaultPaths = async () => {
     console.clear();
+    let basePath = __dirname.includes("/")? __dirname.split("/") : __dirname.split("\\");
+    basePath.pop();
+    basePath.shift();
+    basePath = "/" + basePath.join("/")
+
     // Create the directory for instructional material
-    if(!existsSync(GITHUB)) {
+    if(existsSync("instructor") && !getSubDirs("instructor").length){
         console.info(INFO_COLOR,"Initializing instructor folder...");
         console.info(INFO_COLOR,"Make sure the ssh key has been added to github and access has been granted.")
-        mkdirSync(GITHUB);
-        await promptForLink('instructor','instructor');
+        await promptForLink(basePath + '/instructor','instructor');
     }
 
-    if(existsSync(GITHUB) && !getSubDirs(GITHUB).length){
+    if(!existsSync("instructor")) {
         console.info(INFO_COLOR,"Initializing instructor folder...");
         console.info(INFO_COLOR,"Make sure the ssh key has been added to github and access has been granted.")
-        await promptForLink('instructor','instructor');
+        mkdirSync("instructor");
+        console.log(__dirname);
+        await promptForLink(basePath + '/instructor','instructor');
     }
 
-    // Create the directory for gitlab class material
-    if(!existsSync(GITLAB)) {
+    if(existsSync("student") && !getSubDirs("student").length){
         console.info(INFO_COLOR,"Initializing student folder...");
         console.info(INFO_COLOR,"Make sure the ssh key has been added to gitlab and access has been granted.")
-        mkdirSync(GITLAB);
-        await promptForLink('student','student');
+        await promptForLink(basePath + '/student','student');
     }
 
-    if(existsSync(GITLAB) && !getSubDirs(GITLAB).length){
+    // Create the directory for student class material
+    if(!existsSync("student")) {
         console.info(INFO_COLOR,"Initializing student folder...");
         console.info(INFO_COLOR,"Make sure the ssh key has been added to gitlab and access has been granted.")
-        await promptForLink('student','student');
+        mkdirSync("student");
+        await promptForLink(basePath + '/student','student');
     }
 
     basePromts();

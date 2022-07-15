@@ -1,6 +1,6 @@
 const inquirer = require("inquirer");
 const fileManager = require("../utils/fileManager");
-const {EXIT,BACK,ERROR_COLOR,INFO_COLOR} = require("../utils/constants");
+const {EXIT,BACK,SUCCESS_COLOR,ERROR_COLOR,INFO_COLOR} = require("../utils/constants");
 
 const promptForLink = async (directory,type) => 
     await inquirer
@@ -11,12 +11,12 @@ const promptForLink = async (directory,type) =>
             message: `Enter the ${type} content ssh link to clone:`
         }
     ])
-    .then(({link}) => {
+    .then(async ({link}) => {
         console.clear();
         const baseLink = link.split("/")[0];
         if(type === 'instructor' && baseLink!=="git@github.com:coding-boot-camp"){
             console.info(ERROR_COLOR, "Invalid link, please clone from a coding bootcamp repository.");
-            promptForLink(directory,type);
+            await promptForLink(directory,type);
         }
         else {
             try {
@@ -26,16 +26,16 @@ const promptForLink = async (directory,type) =>
                 fileManager.updateBasePaths(directory+'/'+ fileManager.parseLinkRepo(link),type);
             }catch(error){
                 console.log(ERROR_COLOR, error.message);
+                await promptForLink(directory,type);
             }
-            //basePromts();
         }
     })
-    .catch((error) => {
+    .catch(async (error) => {
         if (error.isTtyError) {
             console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
             console.log(ERROR_COLOR, error.message);
-            promptForLink(directory);
+            await promptForLink(directory,type);
         }
     });
 

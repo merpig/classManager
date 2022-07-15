@@ -7,7 +7,7 @@ const choosePathing = () => {
     const choices = [
         "Default Pathing (stores in classManager)",
         "Select paths for existing content",
-        //"Select paths to clone content to",
+        "Select paths to clone content to",
         EXIT
     ];
 

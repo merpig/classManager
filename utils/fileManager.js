@@ -2,6 +2,7 @@ const { readFileSync, writeFileSync } = require("fs");
 const child_process = require("child_process");
 const ChangeLog = require("./changeLog.js");
 const cm = require("./cm");
+const {INFO_COLOR, SUCCESS_COLOR} = require("./constants")
 
 const isWin = process.platform === "win32";
 const changeLog = new ChangeLog();

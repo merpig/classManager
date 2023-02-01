@@ -15,7 +15,7 @@ const init = async () => {
     } catch (e) {
         console.log(e.message);
         console.info(WARNING_COLOR,"No content paths currently settup.");
-        prompts.settupPrompts();
+        prompts.settupPrompts(prompts.basePrompts);
         return;
     }
 

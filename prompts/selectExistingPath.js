@@ -1,11 +1,10 @@
 const inquirer = require("inquirer");
 const cm = require("../utils/cm");
 const selectedPaths = require("./selectedPaths");
-const basePrompts = require("./basePrompts");
 const fileManager = require("../utils/fileManager");
 const {EXIT,BACK,ERROR_COLOR,INFO_COLOR} = require("../utils/constants");
 
-const selectExistingPath = (path,type,exists,cbPrompts) => {
+const selectExistingPath = (path,type,exists,cbPrompts,basePrompts) => {
     console.info(INFO_COLOR,`Current path: ${path}`);
 
     const msg = exists ? "for existing" : "to save";

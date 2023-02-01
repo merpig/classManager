@@ -4,7 +4,7 @@ const cm = require("../utils/cm");
 const fileManager = require("../utils/fileManager");
 const {EXIT,BACK,ERROR_COLOR,WARNING_COLOR,SUCCESS_COLOR,INFO_COLOR} = require("../utils/constants");
 
-const selectUnitToAdd = (type,cbPrompts) => {
+const selectUnitToAdd = (type,cbPrompts,basePrompts) => {
     let units;
     let message;
 
@@ -12,15 +12,42 @@ const selectUnitToAdd = (type,cbPrompts) => {
         message = "Select unit to add:";
         units = cm.insUnits().filter(unit=>!cm.stuUnits().includes(unit));
     }
+    else if(type === "solved") {
+        message = "Select unit to add all solved to:";
+        const stuUnits = cm.stuUnits();
+
+        // Filters out student units that have all solved already
+        units = stuUnits.filter(stuUnit=>{
+            if(stuUnit.includes("Project")) return false;
+
+            const insPath = cm.insUnitActivitiesPath(stuUnit);
+            const stuPath = cm.stuUnitActivitiesPath(stuUnit);
+
+            let activities = cm.stuUnitActivities(stuUnit).filter((e,i)=>{
+                const insActivityPath = insPath + "/" + cm.insUnitActivities(stuUnit)[i];
+                const activityPath = stuPath + "/" + cm.stuUnitActivities(stuUnit)[i];
+                return (!cm.pathDirs(activityPath).includes("Solved") &&
+                !cm.pathDirs(activityPath).includes("Main"))
+                && activityPath.includes("Stu") 
+                && (cm.pathDirs(insActivityPath).includes("Solved")
+                || cm.pathDirs(insActivityPath).includes("Main"))
+            });
+            return activities.length;
+        });
+
+        if(!units.length){
+            console.info(WARNING_COLOR, "All units already have all solved added.");
+            cbPrompts(basePrompts);
+        }
+    }
     else {
-        if(type==="solved") message = "Select unit to add all solved to:";
-        else if(type==="selectionSolved") message = "Select unit to add selection of solved to:";
+        if(type==="selectionSolved") message = "Select unit to add selection of solved to:";
         else if(type==="removeAllSolved") message = "Select unit to remove all solved from:";
         else if(type==="removeSelectionSolved") message = "Select unit to remove selection of solved from:";
         else if(type==="unitToOpen") message = "Select unit to open:";
         else if(type==="openAllUnits"){
             fileManager.openAtPath(cm.insUnitsPath());
-            return cbPrompts();
+            return cbPrompts(basePrompts);
         }
         if(type==="unitToOpen") units = cm.stuUnits();
         else units = cm.stuUnits().filter(e=>!e.includes("Project"));
@@ -44,15 +71,15 @@ const selectUnitToAdd = (type,cbPrompts) => {
         console.clear();
         switch(options){
             case BACK:
-                if(type==="unitToOpen"||type==="openAllUnits") githubPrompts();
-                else cbPrompts();
+                if(type==="unitToOpen"||type==="openAllUnits") cbPrompts(basePrompts);
+                else cbPrompts(basePrompts);
                 break;
             default:
                 if(type==="unsolved"){
                     console.info(INFO_COLOR, `Adding unit ${options}...`);
                     fileManager.copyUnitUnsolved(options);
                     console.info(SUCCESS_COLOR, `Unit ${options} added. Make sure to select push to update gitlab.`);
-                    cbPrompts();
+                    cbPrompts(basePrompts);
                 }
                 else if(type==="solved"){
                     console.info(INFO_COLOR, `Adding all solved to unit ${options}...`);
@@ -64,7 +91,7 @@ const selectUnitToAdd = (type,cbPrompts) => {
                 }
                 else if(type==="unitToOpen"){
                     fileManager.openAtPath(`${cm.insUnitsPath()}/${options}`);
-                    cbPrompts();
+                    cbPrompts(basePrompts);
                 }
                 else {
                     // Prompt for a selection

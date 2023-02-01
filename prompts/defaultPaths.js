@@ -2,7 +2,7 @@ const { mkdirSync, existsSync } = require("fs");
 const promptForLink = require("./promptForLink");
 const {EXIT,BACK,ERROR_COLOR,WARNING_COLOR,SUCCESS_COLOR,INFO_COLOR} = require("../utils/constants");
 
-const defaultPaths = async () => {
+const defaultPaths = async (cbPrompt) => {
     console.clear();
     let basePath = __dirname.includes("/")? __dirname.split("/") : __dirname.split("\\");
     basePath.pop();
@@ -38,7 +38,7 @@ const defaultPaths = async () => {
         await promptForLink(basePath + '/student','student');
     }
 
-    basePromts();
+    cbPrompt();
 }
 
 module.exports = defaultPaths;

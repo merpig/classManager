@@ -52,23 +52,23 @@ const gitlabPrompts = (basePrompts) => {
                 gitlabPrompts();
                 break;
             case "Add unit unsolved":
-                selectUnitToAdd("unsolved",gitlabPrompts);
+                selectUnitToAdd("unsolved",gitlabPrompts,basePrompts);
                 break;
             case "Add all solved to unit":
                 // Make changes to this so it loops to add all so the whole unit isn't copied
-                selectUnitToAdd("solved",gitlabPrompts);
+                selectUnitToAdd("solved",gitlabPrompts,basePrompts);
                 break;
             case "Add selection of solved to unit":
-                selectUnitToAdd("selectionSolved",gitlabPrompts);
+                selectUnitToAdd("selectionSolved",gitlabPrompts,basePrompts);
                 break;
             case "Remove all solved from unit":
-                selectUnitToAdd("removeAllSolved",gitlabPrompts);
+                selectUnitToAdd("removeAllSolved",gitlabPrompts,basePrompts);
                 break;
             case "Remove selection of solved from unit":
-                selectUnitToAdd("removeSelectionSolved",gitlabPrompts);
+                selectUnitToAdd("removeSelectionSolved",gitlabPrompts,basePrompts);
                 break;
             case "Remove unit":
-                selectUnitToRemove(gitlabPrompts);
+                selectUnitToRemove(gitlabPrompts,basePrompts);
                 break;
             case BACK:
                 basePrompts();
@@ -84,7 +84,7 @@ const gitlabPrompts = (basePrompts) => {
                     fileManager.copyUnitUnsolved(unit);
                     console.info(SUCCESS_COLOR, `Unit ${unit} added! Make sure to select push to update gitlab.`);
                 }
-                gitlabPrompts();
+                gitlabPrompts(basePrompts);
         }
     })
     .catch((error) => {
@@ -92,7 +92,7 @@ const gitlabPrompts = (basePrompts) => {
             console.info(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
             console.log(ERROR_COLOR, error);
-            gitlabPrompts();
+            gitlabPrompts(basePrompts);
         }
     });
 }

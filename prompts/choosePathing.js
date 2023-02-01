@@ -3,7 +3,7 @@ const defaultPaths = require("./defaultPaths");
 const selectExistingPath = require("./selectExistingPath");
 const {EXIT,BACK,ERROR_COLOR,WARNING_COLOR,SUCCESS_COLOR,INFO_COLOR} = require("../utils/constants");
 
-const choosePathing = () => {
+const choosePathing = (cbPrompt) => {
     const choices = [
         "Default Pathing (stores in classManager)",
         "Select paths for existing content",
@@ -23,13 +23,13 @@ const choosePathing = () => {
             console.clear();
             switch(options){
                 case "Default Pathing (stores in classManager)":
-                    defaultPaths();
+                    defaultPaths(cbPrompt);
                     break;
                 case "Select paths for existing content":
-                    selectExistingPath("/","instructor",true,choosePathing);
+                    selectExistingPath("/","instructor",true,choosePathing,cbPrompt);
                     break;
                 case "Select paths to clone content to":
-                    selectExistingPath("/","instructor",false,choosePathing);
+                    selectExistingPath("/","instructor",false,choosePathing,cbPrompt);
                     break;
                 default:
                     console.log(INFO_COLOR, "Exiting Class Manager");

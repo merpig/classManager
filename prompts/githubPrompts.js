@@ -27,19 +27,19 @@ const githubPrompts = (basePrompts) => {
         console.clear();
         switch(options){
             case "Select unit to open":
-                selectUnitToAdd("unitToOpen",githubPrompts);
+                selectUnitToAdd("unitToOpen",githubPrompts,basePrompts);
                 break;
             case "Open all units":
-                selectUnitToAdd("openAllUnits",githubPrompts);
+                selectUnitToAdd("openAllUnits",githubPrompts,basePrompts);
                 break;
             case "Select lesson plan to open":
-                selectLessonPlan(cm.insLessonPlansPath(),githubPrompts);
+                selectLessonPlan(cm.insLessonPlansPath(),githubPrompts,basePrompts);
                 break;
             case "Update":
                 console.info(INFO_COLOR, `Updating ${fileManager.parseClassName(cm.insPath())}...`)
                 fileManager.hardUpdateDirectory(cm.insPath());
                 console.info(SUCCESS_COLOR, `Updated!`);
-                githubPrompts();
+                githubPrompts(basePrompts);
                 break;
             case BACK:
                 basePrompts();
@@ -53,7 +53,7 @@ const githubPrompts = (basePrompts) => {
             console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
             console.log(ERROR_COLOR, error.message);
-            githubPrompts();
+            githubPrompts(basePrompts);
         }
     });
 }

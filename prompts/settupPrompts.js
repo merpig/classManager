@@ -2,7 +2,7 @@ const inquirer = require("inquirer");
 const choosePathing = require("./choosePathing")
 const {EXIT,ERROR_COLOR,INFO_COLOR} = require("../utils/constants");
 
-const settupPrompts = () => {
+const settupPrompts = (cbPrompt) => {
     const choices = [
         "Settup repository paths",
         EXIT
@@ -20,7 +20,7 @@ const settupPrompts = () => {
             console.clear();
             switch(options){
                 case "Settup repository paths":
-                    choosePathing();
+                    choosePathing(cbPrompt);
                     break;
                 default:
                     console.log(INFO_COLOR, "Exiting Class Manager");

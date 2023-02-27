@@ -3,9 +3,9 @@ CLI for managing class repository
 
 
 ## Installation
-
-- To install run ```npm i```
-- To run the application run ```node index```
+- Clone via the ssh link ```git@github.com:merpig/classManager.git```
+- To install run ```npm i``` at the root of classManager
+- To run the application run ```node index``` at the root of classManager
 
 
 ## Usage

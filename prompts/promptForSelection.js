@@ -5,6 +5,13 @@ const {EXIT,BACK,ERROR_COLOR,WARNING_COLOR,SUCCESS_COLOR,INFO_COLOR} = require("
 
 const promptForSelection = (type,unit,cbPrompts) => {
 
+    if(type === "algorithmSolved"){
+        fileManager.addAlgorithmsSolved(unit);
+        console.info(SUCCESS_COLOR, `Unit ${unit} all solved algorithms added. Make sure to select push to update gitlab.`);
+        cbPrompts();
+        return;
+    }
+
     // Filter activities by ones that don't have solved yet but have a solved in instructional unit
     // Generate activity list by if the insUnitActivities has a solved or main folder
     let activities = cm.stuUnitActivities(unit).filter((e,i)=>{

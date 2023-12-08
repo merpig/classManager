@@ -80,6 +80,14 @@ const pushChanges = () => {
     changeLog.updateLog([]);
 }
 
+const addAlgorithmsSolved = (unit) => {
+    const insUnitPath = cm.insUnitPath(unit);
+    const stuUnitPath = cm.stuUnitPath(unit);
+    const extension = "03-Algorithms";
+
+    child_process.execSync(`cp -r ${winPathing}${insUnitPath}/${extension} ${winPathing}${stuUnitPath}`);
+}
+
 const addSelectionSolved = (start,end,unit,activitiesPath,activities) => {
     const startIndex = activities.indexOf(start);
     const endIndex = activities.indexOf(end);
@@ -143,5 +151,6 @@ module.exports = {
     pushChanges,
     addSelectionSolved,
     removeSelectionSolved,
-    updateBasePaths
+    updateBasePaths,
+    addAlgorithmsSolved,
 }

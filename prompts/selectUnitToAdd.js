@@ -2,7 +2,7 @@ const inquirer = require("inquirer");
 const promptForSelection = require("./promptForSelection");
 const cm = require("../utils/cm");
 const fileManager = require("../utils/fileManager");
-const {EXIT,BACK,ERROR_COLOR,WARNING_COLOR,SUCCESS_COLOR,INFO_COLOR} = require("../utils/constants");
+const {BACK,ERROR_COLOR,WARNING_COLOR,SUCCESS_COLOR,INFO_COLOR} = require("../utils/constants");
 
 const selectUnitToAdd = (type,cbPrompts,basePrompts) => {
     let units;
@@ -38,6 +38,40 @@ const selectUnitToAdd = (type,cbPrompts,basePrompts) => {
         if(!units.length){
             console.info(WARNING_COLOR, "All units already have all solved added.");
             cbPrompts(basePrompts);
+            return;
+        }
+    }
+    else if(type === "algorithmSolved"){
+        message = "Select unit to add all algorithm solved to:";
+        const stuUnits = cm.stuUnits();
+        let algoExists = false;
+        units = stuUnits.filter(stuUnit=>{
+            const stuUnitPath = cm.stuUnitPath(stuUnit);
+            const dirs = cm.pathDirs(stuUnitPath);
+            
+            if(!dirs.includes("03-Algorithms")) return false;
+            
+            const algosPath = stuUnitPath + "/03-Algorithms";
+            const algosDirs = cm.pathDirs(algosPath);
+            algoExists = true;
+
+            let unsolvedAlgos = algosDirs.filter(algo=>{
+                const algoPath = algosPath + "/" + algo;
+                const algoDirs = cm.pathDirs(algoPath);
+                return !algoDirs.includes("Solved");
+            });
+
+            return unsolvedAlgos.length;
+        })
+        if(!algoExists){
+            console.info(WARNING_COLOR, "No current units with algo folder.");
+            cbPrompts(basePrompts);
+            return;
+        }
+        else if(!units.length){
+            console.info(WARNING_COLOR, "All units already have all algorithm solved added.");
+            cbPrompts(basePrompts);
+            return;
         }
     }
     else {
@@ -92,6 +126,10 @@ const selectUnitToAdd = (type,cbPrompts,basePrompts) => {
                 else if(type==="unitToOpen"){
                     fileManager.openAtPath(`${cm.insUnitsPath()}/${options}`);
                     cbPrompts(basePrompts);
+                }
+                else if(type==="algorithmSolved"){
+                    console.info(INFO_COLOR, `Adding all solved algorithms to unit ${options}...`);
+                    promptForSelection(type,options,cbPrompts);
                 }
                 else {
                     // Prompt for a selection

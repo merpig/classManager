@@ -17,6 +17,7 @@ const gitlabPrompts = (basePrompts) => {
         "Add selection of solved to unit",
         "Remove all solved from unit",
         "Remove selection of solved from unit",
+        "Add all solved algorithms unit",
         "Remove unit",
         BACK,
         EXIT
@@ -66,6 +67,9 @@ const gitlabPrompts = (basePrompts) => {
                 break;
             case "Remove selection of solved from unit":
                 selectUnitToAdd("removeSelectionSolved",gitlabPrompts,basePrompts);
+                break;
+            case "Add all solved algorithms unit":
+                selectUnitToAdd("algorithmSolved",gitlabPrompts,basePrompts);
                 break;
             case "Remove unit":
                 selectUnitToRemove(gitlabPrompts,basePrompts);

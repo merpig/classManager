@@ -5,3 +5,4 @@ basePaths.json
 utils/changelog.json
 github/
 gitlab/
+.DS_Store

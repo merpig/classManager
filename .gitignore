@@ -6,3 +6,4 @@ utils/changelog.json
 github/
 gitlab/
 .DS_Store
+*/.DS_Store

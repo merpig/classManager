@@ -133,7 +133,7 @@ const updateBasePaths = (path,type) => {
         });
     }catch(e){
         let data = {};
-        data[type] = path;
+        data[type] = `${winPathing}${path}`;
         writeFileSync("basePaths.json", JSON.stringify(data,null,2), function writeJSON(err) {
             if (err) return console.log(err);
             //console.log('writing to ' + "./utils/changeLog.json");

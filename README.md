@@ -1,6 +1,8 @@
 # classManager
 CLI for managing class repository
 
+***If there are spaces in any of the folder/path names the application will not work***
+
 Users will be prompted to clone the instructional github content and the corresponding student gitlab repository via their respective ssh links.
 
 Once a user has cloned both repositories, the main function of the classManager is to quickly add content to the student gitlab without the hastle of moving folders/files manually or through terminal commands. 

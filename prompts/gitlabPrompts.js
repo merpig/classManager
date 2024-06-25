@@ -6,6 +6,7 @@ const fileManager = require("../utils/fileManager");
 const {EXIT,BACK,ERROR_COLOR,WARNING_COLOR,SUCCESS_COLOR,INFO_COLOR} = require("../utils/constants");
 
 const gitlabPrompts = (basePrompts) => {
+    console.info(INFO_COLOR, "Select Push to update gitlab with any changes.");
     const choices = [
         "Pull",
         "Push",
@@ -36,21 +37,21 @@ const gitlabPrompts = (basePrompts) => {
         switch(options){
             case "Pull":
                 fileManager.updateDirectory(cm.stuPath());
-                gitlabPrompts();
+                gitlabPrompts(basePrompts);
                 break;
             case "Push":
                 console.info(INFO_COLOR, "Pushing changes to gitlab...");
                 fileManager.pushChanges();
                 console.info(SUCCESS_COLOR, "Changes pushed up to gitlab.");
-                gitlabPrompts();
+                gitlabPrompts(basePrompts);
                 break;
             case "Hard reset from origin":
                 fileManager.hardUpdateDirectory(cm.stuPath());
-                gitlabPrompts();
+                gitlabPrompts(basePrompts);
                 break;
             case "Current Units":
                 console.log(cm.stuUnits().filter(unit=>unit[0]!=="."&&unit[0]!=="R"));
-                gitlabPrompts();
+                gitlabPrompts(basePrompts);
                 break;
             case "Add unit unsolved":
                 selectUnitToAdd("unsolved",gitlabPrompts,basePrompts);

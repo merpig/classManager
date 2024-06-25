@@ -37,9 +37,8 @@ Once a user has cloned both repositories, the main function of the classManager 
     - ```Push``` Once new content has been added locally, the user will need to select this option to push it up to gitlab.
         - If no new content has been added this will log an error but not break the application.
     - ```Hard reset from origin``` Hard resets the local copy of the student gitlab repo to what's currently on gitlab.
-    - ```Current Units``` Displays an array of current units.
+    - ```Current Units``` Displays an array of the units that have been added to the gitlab clone.
     - ```Add next unit``` Adds the next unit with only the unsolved activities to the local student gitlab clone.
-        - If no units are added, user will need to use ```Add unit unsolved``` to add the first unit.
     - ```Add unit unsolved``` Select a specific unit to add the local student gitlab clone.
     - ```Add all solved to unit``` Select a unit to add all solved activites to. Does not add solved to the challenge.
     - ```Add selection of solved to unit``` Select a unit to add solved to, then select a starting activity and end activity to add all solved between and including those activities.
@@ -48,7 +47,6 @@ Once a user has cloned both repositories, the main function of the classManager 
     - ```Add all solved algorithms unit``` Select a unit to add all the solved algorithms to.
     - ```Remove unit``` Select a unit to remove.
     - ```Back``` Returns to the main prompts.
-        - This will occassionally break and not work, due to some missing callbacks. Currently working on a fix.
     - ```Exit``` Exits the application.
 
 - Resetting classManager

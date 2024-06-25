@@ -3,12 +3,12 @@ const cm = require("../utils/cm");
 const fileManager = require("../utils/fileManager");
 const {EXIT,BACK,ERROR_COLOR,WARNING_COLOR,SUCCESS_COLOR,INFO_COLOR} = require("../utils/constants");
 
-const promptForSelection = (type,unit,cbPrompts) => {
+const promptForSelection = (type,unit,cbPrompts,basePrompts) => {
 
     if(type === "algorithmSolved"){
         fileManager.addAlgorithmsSolved(unit);
         console.info(SUCCESS_COLOR, `Unit ${unit} all solved algorithms added. Make sure to select push to update gitlab.`);
-        cbPrompts();
+        cbPrompts(basePrompts);
         return;
     }
 
@@ -33,24 +33,24 @@ const promptForSelection = (type,unit,cbPrompts) => {
     
     if((type==="selectionSolved" || type==="solved") && !activities.length){
         console.info(WARNING_COLOR, "All solved already added.");
-        cbPrompts();
+        cbPrompts(basePrompts);
         return;
     }
     else if((type==="removeSelectionSolved" || type ==="removeAllSolved") && !activities.length){
         console.info(WARNING_COLOR, "No solved to remove.");
-        cbPrompts();
+        cbPrompts(basePrompts);
         return;
     }
 
     if(type==="solved"){
         fileManager.addSelectionSolved(activities[0],activities[activities.length-1],unit,cm.insUnitActivitiesPath(unit),activities);
         console.info(SUCCESS_COLOR, `Unit ${unit} all solved added. Make sure to select push to update gitlab.`);
-        return cbPrompts();
+        return cbPrompts(basePrompts);
     }
     else if(type==="removeAllSolved"){
         fileManager.removeSelectionSolved(activities[0],activities[activities.length-1],unit,activities);
         console.info(SUCCESS_COLOR, `All solved removed from unit ${unit}.`);
-        return cbPrompts();
+        return cbPrompts(basePrompts);
     }
 
     const messageStart = "Select start activity to " + (type==="selectionSolved"? "add solved to:":"remove solved from:");
@@ -81,13 +81,13 @@ const promptForSelection = (type,unit,cbPrompts) => {
             console.info(INFO_COLOR, `Adding solved activites ${start} through ${end} to unit ${unit}...`);
             fileManager.addSelectionSolved(start,end,unit,cm.insUnitActivitiesPath(unit),activities);
             console.info(SUCCESS_COLOR, `Added solved activites ${start} through ${end} to unit ${unit}.`);
-            cbPrompts();
+            cbPrompts(basePrompts);
         }
         else {
             console.info(INFO_COLOR, `Removing solved activites ${start} through ${end} from unit ${unit}...`);
             fileManager.removeSelectionSolved(start,end,unit,activities);
             console.info(SUCCESS_COLOR, `Removed solved activites ${start} through ${end} from unit ${unit}...`);
-            cbPrompts();
+            cbPrompts(basePrompts);
         }
     })
     .catch((error) => {
@@ -95,7 +95,7 @@ const promptForSelection = (type,unit,cbPrompts) => {
             console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
             console.log(ERROR_COLOR, error.message)
-            cbPrompts();
+            cbPrompts(basePrompts);
         }
     });
 }

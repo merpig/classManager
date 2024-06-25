@@ -117,11 +117,11 @@ const selectUnitToAdd = (type,cbPrompts,basePrompts) => {
                 }
                 else if(type==="solved"){
                     console.info(INFO_COLOR, `Adding all solved to unit ${options}...`);
-                    promptForSelection(type,options,cbPrompts);
+                    promptForSelection(type,options,cbPrompts,basePrompts);
                 }
                 else if(type==="removeAllSolved"){
                     console.info(INFO_COLOR, `Removing all solved from unit ${options}...`);
-                    promptForSelection(type,options,cbPrompts);
+                    promptForSelection(type,options,cbPrompts,basePrompts);
                 }
                 else if(type==="unitToOpen"){
                     fileManager.openAtPath(`${cm.insUnitsPath()}/${options}`);
@@ -129,11 +129,11 @@ const selectUnitToAdd = (type,cbPrompts,basePrompts) => {
                 }
                 else if(type==="algorithmSolved"){
                     console.info(INFO_COLOR, `Adding all solved algorithms to unit ${options}...`);
-                    promptForSelection(type,options,cbPrompts);
+                    promptForSelection(type,options,cbPrompts,basePrompts);
                 }
                 else {
                     // Prompt for a selection
-                    promptForSelection(type,options,cbPrompts);
+                    promptForSelection(type,options,cbPrompts,basePrompts);
                 }
         }
         
@@ -143,7 +143,7 @@ const selectUnitToAdd = (type,cbPrompts,basePrompts) => {
             console.log(ERROR_COLOR, "Prompt failed in the current environment");
         } else {
             console.log(ERROR_COLOR, error.message);
-            selectUnitToAdd(type,cbPrompts);
+            selectUnitToAdd(type,cbPrompts,basePrompts);
         }
     });
 }

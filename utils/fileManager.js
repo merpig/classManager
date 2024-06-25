@@ -28,11 +28,14 @@ const hardUpdateDirectory = (directory) =>{
 }
 
 const nextUnit = arr => {
-
-    let unitValue = arr
-        .filter(unit=>unit[0]!=="."&&unit[0]!=="R")
-        .map(unit=>parseInt(unit.split("-")))
-        .pop();
+    // console.log(arr);
+    let unitValue = 0;
+    if(arr.length){
+        unitValue = arr
+            .filter(unit=>unit[0]!=="."&&unit[0]!=="R")
+            .map(unit=>parseInt(unit.split("-")))
+            .pop();
+    }
     unitValue++;
     unitValue = unitValue.toString(); 
     unitValue = unitValue.length < 2 ? "0"+unitValue : unitValue;

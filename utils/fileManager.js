@@ -126,14 +126,14 @@ const removeSelectionSolved = (start,end,unit,activities) => {
 const updateBasePaths = (path,type) => {
     try{
         let data = JSON.parse(readFileSync("basePaths.json"));
-        data[type] = `${winPathing}${path}`;
+        data[type] = `${path}`;
         writeFileSync("basePaths.json", JSON.stringify(data,null,2), function writeJSON(err) {
             if (err) return console.log(err);
             //console.log('writing to ' + "./utils/changeLog.json");
         });
     }catch(e){
         let data = {};
-        data[type] = `${winPathing}${path}`;
+        data[type] = `${path}`;
         writeFileSync("basePaths.json", JSON.stringify(data,null,2), function writeJSON(err) {
             if (err) return console.log(err);
             //console.log('writing to ' + "./utils/changeLog.json");

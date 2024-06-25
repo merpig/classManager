@@ -126,7 +126,7 @@ const removeSelectionSolved = (start,end,unit,activities) => {
 const updateBasePaths = (path,type) => {
     try{
         let data = JSON.parse(readFileSync("basePaths.json"));
-        data[type] = path;
+        data[type] = `${winPathing}${path}`;
         writeFileSync("basePaths.json", JSON.stringify(data,null,2), function writeJSON(err) {
             if (err) return console.log(err);
             //console.log('writing to ' + "./utils/changeLog.json");

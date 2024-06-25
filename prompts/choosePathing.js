@@ -40,7 +40,7 @@ const choosePathing = (cbPrompt) => {
                 console.log(ERROR_COLOR, "Prompt failed in the current environment");
             } else {
                 console.log(ERROR_COLOR, error.message);
-                choosePathing();
+                choosePathing(cbPrompt);
             }
         });
 }

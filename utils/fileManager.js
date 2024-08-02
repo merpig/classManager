@@ -79,7 +79,9 @@ const pushChanges = () => {
 
     if(commitMessage === "") commitMessage = "committing changes";
 
-    child_process.execSync(`cd ${cm.stuPath().replace(" ","\\ ")} && git add -A && git commit -m "${commitMessage}" && git push`);
+    child_process.execSync(`cd ${cm.stuPath().replace(" ","\\ ")} && git add -A`);//&& git commit -m "${commitMessage}" && git push`);
+    child_process.execSync(`cd ${cm.stuPath().replace(" ","\\ ")} && git commit -m "${commitMessage}"`);
+    child_process.execSync(`cd ${cm.stuPath().replace(" ","\\ ")} && git push`);
     changeLog.updateLog([]);
 }
 

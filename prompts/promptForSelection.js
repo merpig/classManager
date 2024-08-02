@@ -15,9 +15,11 @@ const promptForSelection = (type,unit,cbPrompts,basePrompts) => {
     // Filter activities by ones that don't have solved yet but have a solved in instructional unit
     // Generate activity list by if the insUnitActivities has a solved or main folder
     let activities = cm.stuUnitActivities(unit).filter((e,i)=>{
-        const activityPath = cm.insUnitActivitiesPath(unit)+"/"+cm.insUnitActivities(unit)[i];
-        return cm.pathDirs(activityPath).includes("Solved") ||
-        cm.pathDirs(activityPath).includes("Main")
+       if(cm.insUnitActivities(unit)[i]){
+           const activityPath = cm.insUnitActivitiesPath(unit)+"/"+cm.insUnitActivities(unit)[i];
+           return cm.pathDirs(activityPath).includes("Solved") ||
+           cm.pathDirs(activityPath).includes("Main")
+       }
     });
 
     activities = activities.filter((activity,i)=>{

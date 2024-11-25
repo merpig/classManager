@@ -59,7 +59,8 @@ const promptForSelection = (type,unit,cbPrompts,basePrompts) => {
     const messageEnd = "Select end activity to " + (type==="selectionSolved"?"add solved to:":"remove solved from:");
 
     const choices = [
-        ...activities
+        ...activities,
+        BACK
     ];
 
     inquirer

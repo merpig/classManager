@@ -83,8 +83,45 @@ const selectUnitToAdd = (type,cbPrompts,basePrompts) => {
             fileManager.openAtPath(cm.insUnitsPath());
             return cbPrompts(basePrompts);
         }
+
         if(type==="unitToOpen") units = cm.stuUnits();
-        else units = cm.stuUnits().filter(e=>!e.includes("Project"));
+        else {
+            if(type==="selectionSolved"){
+                console.info(INFO_COLOR, "loading...");
+                units = cm.stuUnits().filter(unit=>{
+                    if(!unit.includes("Project")){
+                        let activities = cm.stuUnitActivities(unit).filter((e,i)=>{
+                            if(cm.insUnitActivities(unit)[i]){
+                                const activityPath = cm.insUnitActivitiesPath(unit)+"/"+cm.insUnitActivities(unit)[i];
+                                return cm.pathDirs(activityPath).includes("Solved") ||
+                                cm.pathDirs(activityPath).includes("Main")
+                            }
+                         });
+                     
+                         activities = activities.filter((activity,i)=>{
+                             const activityContents = cm.pathContents(`${cm.stuUnitActivitiesPath(unit)}/${activity}`);
+                             const includesSolved = activityContents.includes("Solved");
+                             const includesMain = activityContents.includes("Main");
+                             //console.log(e,includesSolved)
+                             if(activity.includes("Project")) {
+                                 return ((type==="selectionSolved"||type==="solved")? !includesMain : includesMain);
+                             }
+                             else return ((type==="selectionSolved"||type==="solved")? !includesSolved : includesSolved);
+                         });
+                         return activities.length;
+                    }
+                    else return false;
+                });
+                if(!units.length){
+                    console.clear();
+                    console.info(WARNING_COLOR, "All units already have all solved activities added.");
+                    cbPrompts(basePrompts);
+                    return;
+                }
+                else console.clear();
+            }
+            else units = cm.stuUnits().filter(e=>!e.includes("Project"));
+        }
     }
 
     const choices = [

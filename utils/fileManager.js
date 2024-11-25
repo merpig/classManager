@@ -9,6 +9,8 @@ const changeLog = new ChangeLog();
 
 const winPathing = isWin?"/c":"";
 
+const gitignore = "**node_modules\n**.DS_Store";
+
 const parseClassName = str => {
     return str.split("/").pop().split("-").map(word=>word[0].toUpperCase()+word.slice(1)).join(" ")
 }
@@ -16,7 +18,8 @@ const parseClassName = str => {
 const parseLinkRepo = str => str.split("/")[1].split(".")[0];
 
 const cloneIntoDirectory = (directory,link) =>{
-    child_process.execSync(`cd ${directory.replace(" ","\\ ")} && git clone ${link}`);
+    const addIgnore = directory==="student"? `&& cd ${parseLinkRepo(link)} && [ -f .gitignore ] || echo ${gitignore} > .gitignore`:"";
+    child_process.execSync(`cd ${directory.replace(" ","\\ ")} && git clone ${link} ${addIgnore}`);
 }
 
 const updateDirectory = (directory) =>{
@@ -49,8 +52,8 @@ const nextUnit = arr => {
 }
 
 const copyUnitUnsolved = (unit) => {
-    const rmSolved = `rm -rf 01-Activities/*/Solved 01-Activities/*/Main 02-Homework/Master 02-Homework/Main 02-Challenge/Main 03-Algorithms/*/Solved`;
-    const addSandbox = `mkdir 05-Sandbox && cd 05-Sandbox && echo # Sandbox folder for activities and testing code > README.md`;
+    const rmSolved = `rm -rf 01-Activities/*/Solved 01-Activities/*/Main 02-Homework/Master 02-Homework/Main 02-Challenge/Main 02-Challenge/edTest 02-Challenge/*.zip 03-Algorithms/*/Solved`;
+    const addSandbox = `mkdir 05-Sandbox && cd 05-Sandbox && echo "# Sandbox folder for activities and testing code" > README.md`;
 
     child_process.execSync(`cp -r ${winPathing}${cm.insUnitsPath()}/${unit} ${winPathing}${cm.stuPath()} && cd ${cm.stuPath().replace(" ","\\ ")}/${unit} && ${rmSolved} && ${addSandbox}`);
 
@@ -101,7 +104,11 @@ const addSelectionSolved = (start,end,unit,activitiesPath,activities) => {
 
     for(let i = startIndex; i<=endIndex; startIndex<=endIndex ? i++ : i--){
         const activity = activities[i];
-        const extension = (activity.includes("Project")?"Main":"Solved");
+
+        // Probably needs updating if the curiculum changes
+        const unitNum = unit.split('-')[0];
+        const edTestUnits = ['01','02','03','04']
+        const extension = edTestUnits.includes(unitNum)?(activity.includes("Project")?"Main":"Solved"):'*';
 
         child_process.execSync(`cp -r ${winPathing}${activitiesPath}/${activities[i]}/${extension} ${winPathing}${gitlabUnitActivitiesPath}/${activity}`);
 
